@@ -28,7 +28,7 @@ namespace SSD
         //float playerSpeed;
 
         Draw _renderer;
-        
+        Terrain heightmapTerrain;
 
         //ModelContainer myModel;
 
@@ -103,6 +103,8 @@ namespace SSD
             _renderer.getModel("testPlane").setScale(4f);
             _renderer.getModel("testPlane").setPosition(0, -1000f, 0);
 
+            heightmapTerrain = new Terrain();
+            heightmapTerrain.CreateTerrainFromHeightMap(Content, GraphicsDevice, "tableTopTexture", "tableTopHeightmap", 1000, 1000, 64, 64, false);
 
             //_renderer.getModel("worldSphere").setScale(40f); //40
             //_renderer.getModel("worldSphere").addPitch(90);
@@ -233,18 +235,26 @@ namespace SSD
             Viewport viewport = graphics.GraphicsDevice.Viewport;
             float aspectRatio = viewport.AspectRatio;
 
-            //Matrix view = Matrix.CreateLookAt(playerShip.getMatrix().Translation + (playerShip.getMatrix().Up * 500), playerShip.getMatrix().Translation, playerShip.getMatrix().Left);
-            Matrix view = Matrix.CreateLookAt(_renderer.getModel("playerShip").getMatrix().Translation + (_renderer.getModel("playerShip").getMatrix().Up * 500),
-                                                _renderer.getModel("playerShip").getMatrix().Translation, new Vector3(1, 0, 0));
+            //Matrix view = Matrix.CreateLookAt(_renderer.getModel("playerShip").getMatrix().Translation + (_renderer.getModel("playerShip").getMatrix().Up * 500),
+            //                                    _renderer.getModel("playerShip").getMatrix().Translation, new Vector3(1, 0, 0));
+
+            Matrix view = Matrix.CreateLookAt(_renderer.getModel("playerShip").getMatrix().Translation + _renderer.getModel("playerShip").getMatrix().Right * 10,
+                                              _renderer.getModel("playerShip").getMatrix().Translation + _renderer.getModel("playerShip").getMatrix().Forward,
+                                              _renderer.getModel("playerShip").getMatrix().Up);
+
             Matrix proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspectRatio, 1.0f, 50000.0f);
 
             //Render all models that are loaded in.
             _renderer.renderAllModels(view, proj);
 
+            heightmapTerrain.Render(GraphicsDevice, Matrix.Identity, proj, view);
+
             //Draw 2D things
             spriteBatch.Begin();
             //Draw nothing
             spriteBatch.End();
+
+
 
             base.Draw(gameTime);
         }
