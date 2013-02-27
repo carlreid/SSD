@@ -20,21 +20,13 @@ namespace SSD
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        //ModelContainer playerShip;
-        //ModelContainer worldModel;
-        //ModelContainer spaceSphere;
-
         float aspectRatio;
-        //float playerSpeed;
 
         Draw _renderer;
-        Terrain heightmapTerrain;
-
-        //ModelContainer myModel;
 
         // Set the position of the model in world space, and set the rotation.
-        //Matrix shipMatrix = Matrix.Identity;
-        //Matrix worldMatrix = Matrix.Identity;
+        Matrix shipMatrix = Matrix.Identity;
+        Matrix worldMatrix = Matrix.Identity;
 
         // Set the position of the camera in world space, for our view matrix.
         Matrix cameraPosition = Matrix.Identity;
@@ -85,29 +77,28 @@ namespace SSD
 
             //Load model
             _renderer.addModel("playerShip", "Models\\space_frigate");
-            //_renderer.addModel("worldSphere", "Models\\burning_planet");
+            _renderer.addModel("worldSphere", "Models\\burning_planet");
             _renderer.addModel("spaceSphere", "Models\\space_sphere");
             _renderer.addModel("e_one", "Models\\e_one");
-            _renderer.addModel("testPlane", "Models\\testPlane");
+            //_renderer.addModel("testPlane", "Models\\testPlane");
 
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
 
             _renderer.getModel("e_one").setScale(1f);
-            _renderer.getModel("e_one").setPosition(0, 3500f, 0);
+            Matrix shipPos = Matrix.CreateTranslation(0, 3500f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90));
+            _renderer.getModel("e_one").setPosition(shipPos.Translation);
 
-            _renderer.getModel("playerShip").setScale(10f);
-            //_renderer.getModel("playerShip").setPosition(0, 6000f, 0);
+            _renderer.getModel("playerShip").setScale(5f);
+            _renderer.getModel("playerShip").setPosition(0, 4500f, 0);
+            //_renderer.getModel("playerShip").setYaw(-90);
 
             _renderer.getModel("spaceSphere").setScale(100f);
 
-            _renderer.getModel("testPlane").setScale(4f);
-            _renderer.getModel("testPlane").setPosition(0, -1000f, 0);
+            //_renderer.getModel("testPlane").setScale(4f);
+            //_renderer.getModel("testPlane").setPosition(0, -1000f, 0);
 
-            heightmapTerrain = new Terrain();
-            heightmapTerrain.CreateTerrainFromHeightMap(Content, GraphicsDevice, "tableTopTexture", "tableTopHeightmap", 1000, 1000, 64, 64, false);
-
-            //_renderer.getModel("worldSphere").setScale(40f); //40
-            //_renderer.getModel("worldSphere").addPitch(90);
+            _renderer.getModel("worldSphere").setScale(40f); //40
+            _renderer.getModel("worldSphere").addPitch(90);
             
 
         }
@@ -139,70 +130,40 @@ namespace SSD
                 ModelContainer spaceSphere = _renderer.getModel("spaceSphere");
                 ModelContainer playerShip = _renderer.getModel("playerShip");
 
+                double angle = Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X);
+                _renderer.getModel("playerShip").setYaw((MathHelper.ToDegrees((float)angle)));
 
-                //spaceSphere.applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(playerShip.getMatrix().Right), (GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * -0.1f) / 50));
-                //spaceSphere.applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(playerShip.getMatrix().Forward), (GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * -0.1f) / 50));
 
-                playerShip.applyMatrix(Matrix.CreateTranslation(new Vector3(10 * GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y,
-                                                                            0,
-                                                                            10 * GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X)
-                                                                ));
+                playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * 0.01f));
+                playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * 0.01f));
 
             }
 
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y != 0)
             {
-                //double angle = Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y * -1, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X * -1);
+                double angle = Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y * -1, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X * -1);
                 //Console.WriteLine(angle);
 
                 //_renderer.getModel("playerShip").setYaw((MathHelper.ToDegrees((float)angle) - 90));
 
-                _renderer.getModel("playerShip").addYaw(5 * GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X);
-                _renderer.getModel("playerShip").addRoll(5 * GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y);
-
             }
-
-            if (GamePad.GetState(PlayerIndex.One).Triggers.Left != 0 || GamePad.GetState(PlayerIndex.One).Triggers.Right != 0)
-            {
-                _renderer.getModel("playerShip").applyMatrix(Matrix.CreateTranslation(0,
-                                                                                      -10 * GamePad.GetState(PlayerIndex.One).Triggers.Left + 10 * GamePad.GetState(PlayerIndex.One).Triggers.Right, 
-                                                                                      0));
-            }
-
-            if (GamePad.GetState(PlayerIndex.One).Buttons.LeftShoulder != 0 || GamePad.GetState(PlayerIndex.One).Buttons.RightShoulder != 0)
-            {
-                if (GamePad.GetState(PlayerIndex.One).Buttons.LeftShoulder == ButtonState.Pressed)
-                {
-                    _renderer.getModel("playerShip").addPitch(5f);
-                }
-                else
-                {
-                    _renderer.getModel("playerShip").addPitch(-5f);
-                }
-            }
-
 
             #endregion
 
-            //modelRotation += (float)gameTime.ElapsedGameTime.TotalMilliseconds * MathHelper.ToRadians(0.1f);
-
             //Rotate the planet
-            //worldMatrix *= Matrix.CreateRotationY(MathHelper.ToRadians(0.1f));
-            //worldMatrix *= Matrix.CreateRotationZ(MathHelper.ToRadians(0.05f));
-
             //_renderer.getModel("worldSphere").addRoll(0.1f);
             //_renderer.getModel("worldSphere").addYaw(0.05f);
 
             _renderer.getModel("spaceSphere").addRoll(-0.1f);
             _renderer.getModel("spaceSphere").addYaw(-0.05f);
 
-            _renderer.getModel("e_one").addYaw(1);
+            //_renderer.getModel("e_one").addYaw(1);
             _renderer.getModel("e_one").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(_renderer.getModel("e_one").getMatrix().Backward), 0.01f));
-
-
-            //playerShip.addYaw(1);
+            _renderer.getModel("e_one").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(_renderer.getModel("e_one").getMatrix().Left), 0.01f));
+            //_renderer.getModel("e_one").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(_renderer.getModel("e_one").getMatrix().Down), 0.01f));
 
             Quaternion cameraOriantaion = Quaternion.CreateFromRotationMatrix(_renderer.getModel("playerShip").getMatrix());
+            //cameraPosition = Matrix.CreateTranslation(new Vector3(0, 1000, -1000) + _renderer.getModel("playerShip").getPosition());
             cameraPosition = Matrix.CreateTranslation(new Vector3(0, 1000, -1000) + _renderer.getModel("playerShip").getPosition());
 
             base.Update(gameTime);
@@ -235,19 +196,33 @@ namespace SSD
             Viewport viewport = graphics.GraphicsDevice.Viewport;
             float aspectRatio = viewport.AspectRatio;
 
-            //Matrix view = Matrix.CreateLookAt(_renderer.getModel("playerShip").getMatrix().Translation + (_renderer.getModel("playerShip").getMatrix().Up * 500),
-            //                                    _renderer.getModel("playerShip").getMatrix().Translation, new Vector3(1, 0, 0));
 
-            Matrix view = Matrix.CreateLookAt(_renderer.getModel("playerShip").getMatrix().Translation + _renderer.getModel("playerShip").getMatrix().Right * 10,
-                                              _renderer.getModel("playerShip").getMatrix().Translation + _renderer.getModel("playerShip").getMatrix().Forward,
-                                              _renderer.getModel("playerShip").getMatrix().Up);
+            //Matrix view = Matrix.CreateLookAt(_renderer.getModel("playerShip").getMatrix().Translation + (_renderer.getModel("playerShip").getMatrix().Up * 500),
+            //                      _renderer.getModel("playerShip").getMatrix().Translation, _renderer.getModel("playerShip").getMatrix().Left);
+
+
+
+
+
+            Vector3 cameraPosition = _renderer.getModel("playerShip").getMatrix().Translation + _renderer.getModel("playerShip").getMatrix().Up * 1000;
+            Vector3 cameraTarget = _renderer.getModel("playerShip").getMatrix().Translation;
+            //Vector3 cameraUp = _renderer.getModel("playerShip").getMatrix().Forward;
+            //Vector3 cameraUp = new Vector3(-100, 0, 0);
+            Vector3 cameraUp = Vector3.Transform(cameraPosition - cameraTarget, Matrix.CreateRotationX(90));
+            
+
+            Matrix view = Matrix.CreateLookAt(cameraPosition, cameraTarget, cameraUp);
+
+            Debug.WriteLine(_renderer.getModel("playerShip").getMatrix().Up);
+
+            //Vector3 campos = cameraPosition.Translation;
+
+            //Matrix view = Matrix.CreateLookAt(cameraPosition.Translation, _renderer.getModel("playerShip").getMatrix().Translation, new Vector3(1, 0, 0));
 
             Matrix proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspectRatio, 1.0f, 50000.0f);
 
             //Render all models that are loaded in.
             _renderer.renderAllModels(view, proj);
-
-            heightmapTerrain.Render(GraphicsDevice, Matrix.Identity, proj, view);
 
             //Draw 2D things
             spriteBatch.Begin();

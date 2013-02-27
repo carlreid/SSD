@@ -1,6 +1,29 @@
 Space Texture From: http://cdn.overclock.net/c/ca/ca5bdccc_Wallpapers-room_com___Evera_Nebula_by_freelancah_1920x1200.jpeg
 
-Milestone 2 (14/01/2013)
+Milestone 3 (25/02/2013)
+
+New Functionality
+-----------------
+
+- "First Person" Camera
+- Terrain generation
+
+Code Additions
+--------------
+
+- Terrain.cs (Kieth's code)
+
+Tests
+-----
+
+- Visual checks to see if camera working correctly and terrain generating correctly.
+
+Notes
+-----
+The functionality added here I won't be adding into my game. I simply added them to meet milestone 3.
+I may end up attempting a first person camera for some future reason though.
+
+Milestone 2 (23/02/2013)
 --------------------------------
 
 New Functionality

@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using System.Diagnostics;
 
 namespace SSD
 {
@@ -39,12 +40,16 @@ namespace SSD
         public Matrix getMatrix()
         {
             Matrix transform = Matrix.Identity;
+
+            Quaternion accumulateRotation = _rotation * Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
             
+            //Doing Scale->Translate->Rotation - things will orbit in the game so translate and rotate is ideal
             transform *= Matrix.CreateScale(_scale);
-            transform *= Matrix.CreateFromQuaternion(_rotation);
+            transform *= Matrix.CreateTranslation(_position);
+            transform *= Matrix.CreateFromQuaternion(accumulateRotation);
 
            
-            transform *= Matrix.CreateTranslation(_position);
+            
             transform *= _matrix;
             return transform;
         }
@@ -81,37 +86,38 @@ namespace SSD
         public void addYaw(float yaw)
         {
             _yaw += MathHelper.ToRadians(yaw);
-            _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            //_rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
         }
 
         public void addPitch(float pitch)
         {
             _pitch += MathHelper.ToRadians(pitch);
-            _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            //_rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
         }
 
         public void addRoll(float roll)
         {
             _roll += MathHelper.ToRadians(roll);
-            _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            //_rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
         }
 
         public void setYaw(float yaw)
         {
             _yaw = MathHelper.ToRadians(yaw);
-            _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            //Debug.WriteLine("Got yaw of: " + yaw);
+            //_rotation *= Quaternion.CreateFromAxisAngle(Vector3.Up, yaw); 
         }
 
         public void setPitch(float pitch)
         {
             _pitch = MathHelper.ToRadians(pitch);
-            _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            //_rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
         }
 
         public void setRoll(float roll)
         {
             _roll = MathHelper.ToRadians(roll);
-            _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            //_rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
         }
 
         public Matrix getBoneTransform(int index){
@@ -123,6 +129,32 @@ namespace SSD
             //_rotation *= Quaternion.CreateFromRotationMatrix(mat);
 
             _matrix *= mat; //Acumulating...
+        }
+
+        public float getYaw()
+        {
+            return _yaw;
+        }
+
+        public float getPitch()
+        {
+            return _pitch;
+        }
+
+        public float getRoll()
+        {
+            return _roll;
+        }
+
+        public void addRotation(Quaternion rotation)
+        {
+            _rotation *= rotation;
+        }
+
+        public Quaternion getRotation()
+        {
+            Quaternion accumulateRotation = _rotation * Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            return accumulateRotation;
         }
 
         Model _model;
