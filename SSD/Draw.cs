@@ -25,38 +25,70 @@ namespace SSD
            
         }
 
-        public void render(ModelContainer model, Matrix view, Matrix proj)
-        {
-            foreach (ModelMesh mesh in model.getModel().Meshes)
-            {
-                foreach (BasicEffect effect in mesh.Effects)
-                {
-                    effect.EnableDefaultLighting();
-                    effect.PreferPerPixelLighting = true;
+        //public void render(ModelContainer model, Matrix view, Matrix proj)
+        //{
+        //    foreach (ModelMesh mesh in model.getModel().Meshes)
+        //    {
+        //        foreach (BasicEffect effect in mesh.Effects)
+        //        {
+        //            effect.EnableDefaultLighting();
+        //            effect.PreferPerPixelLighting = true;
 
-                    effect.World = model.getBoneTransform(mesh.ParentBone.Index) * model.getMatrix();
-                    effect.View = view;
-                    effect.Projection = proj;
-                }
-                mesh.Draw();
-            }
-        }
+        //            effect.World = model.getBoneTransform(mesh.ParentBone.Index) * model.getMatrix();
+        //            effect.View = view;
+        //            effect.Projection = proj;
+        //        }
+        //        mesh.Draw();
+        //    }
+        //}
 
-        public void renderAllModels(Matrix view, Matrix proj)
+        //public void renderAllModels(Matrix view, Matrix proj)
+        //{
+        //    foreach (KeyValuePair<string, ModelContainer> modelEntry in _models)
+        //    {
+        //        foreach (ModelMesh mesh in modelEntry.Value.getModel().Meshes)
+        //        {
+        //            foreach (ModelMeshPart meshPart in mesh.MeshParts)
+        //            {
+        //                foreach (BasicEffect effect in mesh.Effects)
+        //                {
+        //                    if (modelEntry.Key == "nebula")
+        //                    {
+        //                        effect.Alpha = 0.5f;
+        //                    }
+
+        //                    //if (modelEntry.Key == "nebula")
+        //                    //{
+        //                    //    _graphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
+        //                    //}
+        //                    //else
+        //                    //{
+        //                    //    _graphicsDevice.DepthStencilState.DepthBufferWriteEnable = false;
+        //                    //}
+
+        //                    //effect.EnableDefaultLighting();
+        //                    //effect.PreferPerPixelLighting = true;
+
+
+
+        //                    effect.World = modelEntry.Value.getBoneTransform(mesh.ParentBone.Index) * modelEntry.Value.getMatrix();
+        //                    effect.View = view;
+        //                    effect.Projection = proj;
+        //                }
+        //                mesh.Draw();
+        //            }
+        //        }
+        //    }
+        //}
+
+        public void renderEntity(Matrix view, Matrix proj, Entity entity)
         {
-            foreach (KeyValuePair<string, ModelContainer> modelEntry in _models)
-            {
-                foreach (ModelMesh mesh in modelEntry.Value.getModel().Meshes)
+                foreach (ModelMesh mesh in entity.getModelContainer().getModel().Meshes)
                 {
                     foreach (ModelMeshPart meshPart in mesh.MeshParts)
                     {
                         foreach (BasicEffect effect in mesh.Effects)
                         {
-                            if (modelEntry.Key == "nebula")
-                            {
-                                effect.Alpha = 0.5f;
-                            }
-
                             //if (modelEntry.Key == "nebula")
                             //{
                             //    _graphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
@@ -70,15 +102,13 @@ namespace SSD
                             //effect.PreferPerPixelLighting = true;
 
 
-
-                            effect.World = modelEntry.Value.getBoneTransform(mesh.ParentBone.Index) * modelEntry.Value.getMatrix();
+                            effect.World = entity.getModelContainer().getBoneTransform(mesh.ParentBone.Index) * entity.getMatrix();
                             effect.View = view;
                             effect.Projection = proj;
                         }
                         mesh.Draw();
                     }
                 }
-            }
         }
 
         public void addModel(String modelName, String filePath)
