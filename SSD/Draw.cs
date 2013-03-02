@@ -14,6 +14,7 @@ namespace SSD
     class Draw
     {
 
+
         public Draw(GraphicsDevice graphicsDevice, ContentManager content)
         {
             _graphicsDevice = graphicsDevice;
@@ -21,7 +22,7 @@ namespace SSD
             _models = new Dictionary<string,ModelContainer>();
             //Matrix view = Matrix.CreateLookAt(playerShip.getMatrix().Translation + (playerShip.getMatrix().Up * 100), playerShip.getMatrix().Translation, playerShip.getMatrix().Left);
             //Matrix proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspectRatio, 1.0f, 10000.0f);
-
+           
         }
 
         public void render(ModelContainer model, Matrix view, Matrix proj)
@@ -47,16 +48,35 @@ namespace SSD
             {
                 foreach (ModelMesh mesh in modelEntry.Value.getModel().Meshes)
                 {
-                    foreach (BasicEffect effect in mesh.Effects)
+                    foreach (ModelMeshPart meshPart in mesh.MeshParts)
                     {
-                        effect.EnableDefaultLighting();
-                        effect.PreferPerPixelLighting = true;
+                        foreach (BasicEffect effect in mesh.Effects)
+                        {
+                            if (modelEntry.Key == "nebula")
+                            {
+                                effect.Alpha = 0.5f;
+                            }
 
-                        effect.World = modelEntry.Value.getBoneTransform(mesh.ParentBone.Index) * modelEntry.Value.getMatrix();
-                        effect.View = view;
-                        effect.Projection = proj;
+                            //if (modelEntry.Key == "nebula")
+                            //{
+                            //    _graphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
+                            //}
+                            //else
+                            //{
+                            //    _graphicsDevice.DepthStencilState.DepthBufferWriteEnable = false;
+                            //}
+
+                            //effect.EnableDefaultLighting();
+                            //effect.PreferPerPixelLighting = true;
+
+
+
+                            effect.World = modelEntry.Value.getBoneTransform(mesh.ParentBone.Index) * modelEntry.Value.getMatrix();
+                            effect.View = view;
+                            effect.Projection = proj;
+                        }
+                        mesh.Draw();
                     }
-                    mesh.Draw();
                 }
             }
         }

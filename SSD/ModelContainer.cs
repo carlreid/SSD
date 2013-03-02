@@ -22,6 +22,7 @@ namespace SSD
             _model.CopyAbsoluteBoneTransformsTo(_boneTransforms);
             _matrix = Matrix.Identity;
 
+
             _scale = 1;
             _yaw = 0;
             _pitch = 0;
