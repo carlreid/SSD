@@ -26,6 +26,7 @@ namespace SSD
         Vector3 camUp = Vector3.Left;
         //Entity playerEntity;
         Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
+        List<Bullet> _bullets = new List<Bullet>();
 
         public Game1()
         {
@@ -38,7 +39,7 @@ namespace SSD
         {
             try
             {
-                Entity entity;
+                Entity entity = null;
                 _entities.TryGetValue(entityName, out entity);
                 return entity;
             }
@@ -93,12 +94,12 @@ namespace SSD
             //_renderer.addModel("testPlane", "Models\\testPlane");
 
             //Create entities
-            _entities.Add("player", new Entity(new Vector3(0, 4500f, 0), _renderer.getModel("playerShip"), 5f, 90));
-            _entities.Add("player2", new Entity(new Vector3(0, 4500f, 0), _renderer.getModel("playerShip"), 5f, 80, 10));
-            _entities.Add("player3", new Entity(new Vector3(0, 4500f, 0), _renderer.getModel("playerShip"), 5f, 70, 20));
-            _entities.Add("player4", new Entity(new Vector3(0, 4500f, 0), _renderer.getModel("playerShip"), 5f, 60, 30));
-            _entities.Add("player5", new Entity(new Vector3(0, 4500f, 0), _renderer.getModel("playerShip"), 5f, 50, 40));
-            _entities.Add("player6", new Entity(new Vector3(0, 4500f, 0), _renderer.getModel("playerShip"), 5f, 40, 50));
+            _entities.Add("player", new Entity(new Vector3(0, 4000f, 0), _renderer.getModel("playerShip"), 5f, 90));
+            _entities.Add("player2", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 80, 10));
+            _entities.Add("player3", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 70, 20));
+            _entities.Add("player4", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 60, 30));
+            _entities.Add("player5", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 50, 40));
+            _entities.Add("player6", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 40, 50));
             _entities.Add("e_one",    new Entity((Matrix.CreateTranslation(0, 3500f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 1f));
             _entities.Add("universe", new Entity(Vector3.Zero, _renderer.getModel("spaceSphere"), 100f));
             _entities.Add("world",    new Entity(Vector3.Zero, _renderer.getModel("worldSphere"), 40f, 0, 90));
@@ -177,13 +178,31 @@ namespace SSD
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y != 0)
             {
                 double angle = Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y * -1, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X * -1);
+                angle -= 90;
                 //Console.WriteLine(angle);
 
-                //_renderer.getModel("playerShip").setYaw((MathHelper.ToDegrees((float)angle) - 90));
+                //Random ran = new Random();
+                //string bulletName = "bullet" + ran.Next(50000);
+                //while (getEntity(bulletName) != null)
+                //{
+                //    bulletName = "bullet" + ran.Next(50000);
+                //}
+                //_entities.Add(bulletName, new Entity(getEntity("player").getMatrix().Translation, _renderer.getModel("bullet"), 5f, 0, 0));
+
+
+                _bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, (float)angle, _renderer.getModel("bullet")));
+                //Debug.WriteLine(getEntity("player").getMatrix().Translation);
 
             }
 
             #endregion
+
+
+            foreach (Bullet bul in _bullets)
+            {
+                bul.update();
+                //bul.setPosition(getEntity("player").getMatrix().Translation);
+            }
 
             //Rotate the planet
             getEntity("world").addRoll(0.1f);
@@ -227,13 +246,14 @@ namespace SSD
             //Console.WriteLine(GraphicsDevice.Adapter.DeviceName.ToString());
 
             GraphicsDevice.Clear( ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
+            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             // Copy any parent transforms. (From bones)
 
             //Matrix[] transforms = new Matrix[myModel.getModel().Bones.Count];
             //myModel.getModel().CopyAbsoluteBoneTransformsTo(transforms);            
 
-            graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            
             //GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
             //GraphicsDevice.BlendState = BlendState.AlphaBlend;
@@ -283,6 +303,11 @@ namespace SSD
             foreach(KeyValuePair<string, Entity> entity in _entities)
             {
                 _renderer.renderEntity(view, proj, entity.Value);
+            }
+
+            foreach (Bullet b in _bullets)
+            {
+                _renderer.renderEntity(view, proj, b);
             }
 
             //Draw 2D things

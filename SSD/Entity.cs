@@ -19,7 +19,7 @@ namespace SSD
             _roll = roll;
         }
 
-        public Matrix getMatrix()
+        virtual public Matrix getMatrix()
         {
             Matrix transform = Matrix.Identity;
 
@@ -32,6 +32,11 @@ namespace SSD
 
             transform *= _matrix;
             return transform;
+        }
+
+        public Matrix getTransformMatrix()
+        {
+            return _matrix;
         }
 
         public Vector3 getPosition()
@@ -137,6 +142,10 @@ namespace SSD
         public ModelContainer getModelContainer()
         {
             return _model;
+        }
+
+        public float getScale(){
+            return _scale;
         }
 
 
