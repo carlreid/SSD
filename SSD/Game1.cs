@@ -10,6 +10,9 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Diagnostics;
 
+using DPSF;
+using DPSF.ParticleSystems;
+
 namespace SSD
 {
     /// <summary>
@@ -26,8 +29,12 @@ namespace SSD
         Vector3 camUp = Vector3.Left;
         //Entity playerEntity;
         Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
+
         List<Bullet> _bullets = new List<Bullet>();
-        WorldMap _map = new WorldMap();
+        float _lastBulletAngle = 0;
+
+        // Declare our Particle System variable
+        SmokeParticleSystem shipExaustParticles = null;
 
         public Game1()
         {
@@ -101,6 +108,12 @@ namespace SSD
         /// </summary>
         protected override void LoadContent()
         {
+            // Declare a new Particle System instance and Initialize it
+            shipExaustParticles = new SmokeParticleSystem(this);
+            shipExaustParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+            
+
+
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -110,6 +123,7 @@ namespace SSD
             graphics.IsFullScreen = false;
             graphics.PreferMultiSampling = true;
             graphics.ApplyChanges();
+
 
             _renderer = new Draw(graphics.GraphicsDevice, Content);
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
@@ -123,12 +137,11 @@ namespace SSD
             _renderer.addModel("bullet", "Models\\bullet");
 
             //Create entities
-            _entities.Add("player", new Entity(new Vector3(0, 3500f, 0), _renderer.getModel("playerShip"), 5f, 90));
+            _entities.Add("player", new Entity(new Vector3(0, 2000f, 0), _renderer.getModel("playerShip"), 1f, 90));
 
-            _entities.Add("e_one",    new Entity((Matrix.CreateTranslation(0, 3500f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 1f));
+            _entities.Add("e_one",    new Entity((Matrix.CreateTranslation(0, 1500f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 1f));
             _entities.Add("universe", new Entity(Vector3.Zero, _renderer.getModel("spaceSphere"), 100f));
-            _entities.Add("world",    new Entity(Vector3.Zero, _renderer.getModel("worldSphere"), 40f, 0, 90));
-
+            _entities.Add("world",    new Entity(Vector3.Zero, _renderer.getModel("worldSphere"), 20f, 0, 90));
 
         }
 
@@ -139,6 +152,8 @@ namespace SSD
         protected override void UnloadContent()
         {
             // TODO: Unload any non ContentManager content here
+
+            shipExaustParticles.Destroy();
         }
 
         /// <summary>
@@ -237,8 +252,11 @@ namespace SSD
                 //playerRotation *= Quaternion.CreateFromAxisAngle(getEntity("player").getMatrix().Up, MathHelper.ToRadians(angle + 90));
 
                 float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
+                float angleDiff = calcYaw - _lastBulletAngle;
+                Debug.WriteLine(angleDiff);
+                _lastBulletAngle = calcYaw;
 
-                _bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("bullet")));
+                _bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, playerRotation, calcYaw - angleDiff, _renderer.getModel("bullet")));
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
@@ -259,6 +277,8 @@ namespace SSD
             }
 
             _bullets.RemoveAll(removeBullets);
+
+            shipExaustParticles.Emitter.PositionData.Position = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Backward * 40; ;
 
             getEntity("universe").addRoll(-0.1f);
             getEntity("universe").addYaw(-0.05f);
@@ -287,7 +307,7 @@ namespace SSD
             Viewport viewport = graphics.GraphicsDevice.Viewport;
             float aspectRatio = viewport.AspectRatio;
 
-            Vector3 cameraPosition = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Up * 1000;
+            Vector3 cameraPosition = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Up * 2000;
             Vector3 cameraTarget = getEntity("player").getMatrix().Translation;
             camUp.Normalize();
 
@@ -305,11 +325,19 @@ namespace SSD
                 _renderer.renderEntity(view, proj, b);
             }
 
+            // Set the Particle System's World, View, and Projection matrices so that it knows how to draw the particles properly.
+            shipExaustParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
+
+            // Update the Particle System
+            shipExaustParticles.SetCameraPosition(cameraPosition);
+            shipExaustParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
+            shipExaustParticles.Draw();
+
             //Draw 2D things
             spriteBatch.Begin();
             //Draw nothing
             spriteBatch.End();
-
 
 
             base.Draw(gameTime);

@@ -7,7 +7,7 @@ namespace SSD
     class Bullet : Entity
     {
         public Bullet(Vector3 position, Quaternion rotation, float yaw, ModelContainer bulletModel)
-            : base(position, bulletModel, 5, yaw)
+            : base(position, bulletModel, 1, yaw)
         {
             //_position = startMatrix.Translation;
             //_direction = new Vector3((float)Math.Sin(yaw), (float)Math.Cos(yaw), 0);
@@ -70,6 +70,7 @@ namespace SSD
 
         float _curAngle;
         float _angleModifier;
+
         //Vector3 _position;
     }
 }

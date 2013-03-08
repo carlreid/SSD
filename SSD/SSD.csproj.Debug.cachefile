@@ -4,6 +4,8 @@ Content\Textures\space_frigate_6_color.xnb
 Content\Textures\space_frigate_6_illumination.xnb
 Content\Textures\space_frigate_6_specular.xnb
 Content\Models\planet_texture.xnb
+Content\Models\nebula.xnb
+Content\Models\metalBullTexture.xnb
 Content\DebugFont.xnb
 Content\myEffect.xnb
 Content\Models\space_frigate.xnb
@@ -11,12 +13,11 @@ Content\Models\burning_planet.xnb
 Content\Models\space_sphere.xnb
 Content\Models\e_one.xnb
 Content\Models\testPlane.xnb
+Content\Models\nebula_bg.xnb
+Content\Models\bullet.xnb
+Content\Textures\Smoke.xnb
+Content\space_frigate_6\space_frigate_6_color_0.xnb
 Content\Models\planet_texture_0.xnb
 Content\Models\space_art_0.xnb
-Content\space_frigate_6\space_frigate_6_color_0.xnb
-Content\Models\nebula.xnb
-Content\Models\nebula_bg.xnb
 Content\Models\nebula_0.xnb
-Content\Models\metalBullTexture.xnb
-Content\Models\bullet.xnb
 Content\Models\metalBullTexture_0.xnb
