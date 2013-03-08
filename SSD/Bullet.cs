@@ -1,46 +1,75 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
+using System.Diagnostics;
 
 namespace SSD
 {
     class Bullet : Entity
     {
-        public Bullet(Vector3 position, float yaw, ModelContainer bulletModel)
-            : base(position, bulletModel, 5)
+        public Bullet(Vector3 position, Quaternion rotation, float yaw, ModelContainer bulletModel)
+            : base(position, bulletModel, 5, yaw)
         {
             //_position = startMatrix.Translation;
-            _direction = yaw;
-            
+            //_direction = new Vector3((float)Math.Sin(yaw), (float)Math.Cos(yaw), 0);
+            //_directionYaw = yaw;
+
+            base.addRotation(rotation);
+
+            _curAngle = 0;
+            _angleModifier = 0.5f;
+            _timeTillDeath = 1000;
+            _isAlive = true;
         }
 
-        //override public Matrix getMatrix()
-        //{
-        //    Matrix transform = Matrix.Identity;
-
-        //    Quaternion accumulateRotation = base.getRotation() * Quaternion.CreateFromYawPitchRoll(base.getYaw(), base.getPitch(), base.getRoll());
-
-        //    //Doing Scale->Translate->Rotation - things will orbit in the game so translate and rotate is ideal
-        //    transform *= Matrix.CreateScale(base.getScale());
-        //    transform *= Matrix.CreateFromQuaternion(accumulateRotation);
-        //    transform *= Matrix.CreateTranslation(base.getPosition());
-
-        //    transform *= base.getTransformMatrix();
-        //    return transform;
-        //}
-
-        public void update()
+        override public Matrix getMatrix()
         {
-            //base.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.1f));
-            //base.setPosition((Matrix.CreateTranslation(_position) * Matrix.CreateRotationZ(MathHelper.ToRadians(_curAngle)) * Matrix.CreateRotationX(MathHelper.ToRadians(_curAngle)) * Matrix.CreateRotationY(MathHelper.ToRadians(_curAngle))).Translation);
-            //base.addPitch(2);
-            //_curAngle += 3f;
+            Matrix transform = Matrix.Identity;
 
-            base.setYaw(MathHelper.ToDegrees(_direction));
-            base.addRotation(Quaternion.CreateFromAxisAngle(base.getMatrix().Forward, 0.01f));
-            base.setYaw(MathHelper.ToDegrees(0));
+            Quaternion accumulateRotation = base.getRotation();
+
+            transform *= Matrix.CreateScale(base.getScale());
+            transform *= Matrix.CreateFromQuaternion(accumulateRotation);
+            transform *= Matrix.CreateTranslation(base.getPosition());
+            transform *= Matrix.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(base.getMatrix().Forward, MathHelper.ToRadians(_curAngle)));
+
+            return transform;
         }
 
-        float _velocity;
-        float _direction;
+        public void update(TimeSpan deltaTime)
+        {
+
+            _curAngle += _angleModifier;
+
+            if (_angleModifier > 0.05f)
+            {
+                _angleModifier -= 0.018f;
+                if (_angleModifier < 0.05f)
+                {
+                    _angleModifier = 0.05f;
+                }
+            }
+            
+
+            _timeTillDeath -= deltaTime.Milliseconds;
+            if (_timeTillDeath <= 0)
+            {
+                _isAlive = false;
+            }
+        }
+
+        public bool getAlive()
+        {
+            return _isAlive;
+        }
+
+        //float _velocity;
+        Vector3 _direction;
+        float _directionYaw;
+        float _timeTillDeath;
+        bool _isAlive;
+
+        float _curAngle;
+        float _angleModifier;
         //Vector3 _position;
     }
 }

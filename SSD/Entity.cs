@@ -9,35 +9,35 @@ namespace SSD
         {
             _position = position;
             _model = model;
-            _matrix = Matrix.Identity;
+            ////_matrix = Matrix.Identity;
             //_position = Vector3.Zero;
             _rotation = Quaternion.Identity;
 
             _scale = scale;
-            _yaw = yaw;
-            _pitch = pitch;
-            _roll = roll;
+            _yaw = MathHelper.ToRadians(yaw);
+            _pitch = MathHelper.ToRadians(pitch);
+            _roll = MathHelper.ToRadians(roll);
         }
 
         virtual public Matrix getMatrix()
         {
             Matrix transform = Matrix.Identity;
 
-            Quaternion accumulateRotation = _rotation * Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
+            Quaternion accumulateRotation = getRotation() /* * Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll) */;
 
             //Doing Scale->Translate->Rotation - things will orbit in the game so translate and rotate is ideal
             transform *= Matrix.CreateScale(_scale);
             transform *= Matrix.CreateTranslation(_position);
             transform *= Matrix.CreateFromQuaternion(accumulateRotation);
 
-            transform *= _matrix;
+            //transform *= _matrix;
             return transform;
         }
 
-        public Matrix getTransformMatrix()
-        {
-            return _matrix;
-        }
+        //public Matrix getTransformMatrix()
+        //{
+        //    return _matrix;
+        //}
 
         public Vector3 getPosition()
         {
@@ -89,6 +89,7 @@ namespace SSD
         public void setYaw(float yaw)
         {
             _yaw = MathHelper.ToRadians(yaw);
+
             //Debug.WriteLine("Got yaw of: " + yaw);
             //_rotation *= Quaternion.CreateFromAxisAngle(Vector3.Up, yaw); 
         }
@@ -105,13 +106,13 @@ namespace SSD
             //_rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, _roll);
         }
 
-        public void applyMatrix(Matrix mat)
-        {
-            //_position = mat.Translation;
-            //_rotation *= Quaternion.CreateFromRotationMatrix(mat);
+        //public void applyMatrix(Matrix mat)
+        //{
+        //    //_position = mat.Translation;
+        //    //_rotation *= Quaternion.CreateFromRotationMatrix(mat);
 
-            _matrix *= mat; //Acumulating...
-        }
+        //    _matrix *= mat; //Acumulating...
+        //}
 
         public float getYaw()
         {
@@ -149,12 +150,18 @@ namespace SSD
         }
 
 
+        
+
+
         ModelContainer _model;
-        Matrix _matrix;
+        //Matrix _matrix;
         float _scale;
         float _yaw;
         float _pitch;
         float _roll;
+
+        //Vector3 _orbitPosition;
+        //Quaternion _orbitRotation;
 
         Vector3 _position;
         Quaternion _rotation;

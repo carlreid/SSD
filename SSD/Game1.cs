@@ -27,12 +27,17 @@ namespace SSD
         //Entity playerEntity;
         Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
         List<Bullet> _bullets = new List<Bullet>();
+        WorldMap _map = new WorldMap();
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             
+        }
+
+        private bool removeBullets(Bullet b){
+            return !b.getAlive();
         }
 
         private Entity getEntity(String entityName)
@@ -49,6 +54,31 @@ namespace SSD
                 throw;
             }
         }
+
+        //public static Vector3 MapToSphere(Vector3 coords, WorldMap MAP)
+        //{
+        //    float pi = 3.14159265f;
+        //    float thetaDelta = ((2 * pi) / (MAP.XSize - 1));
+        //    float phiDelta = ((pi) / (MAP.ZSize - .5f));
+        //    float RadiusBase = ((MAP.XSize) / pi / 2f);
+        //    float theta = (coords.Z * thetaDelta);
+        //    float phi = (coords.X * phiDelta);
+
+        //    //Limit the map to half a sphere
+        //    if (theta > pi) { theta = theta - (pi); }
+
+        //    if (theta < 0.0) { theta = theta + (pi); }
+
+        //    if (phi > 2 * pi) { phi = phi - (2 * pi); }
+
+        //    if (phi < 0.0) { phi = phi + (2 * pi); }
+
+        //    Vector3 coords2 = new Vector3();
+        //    coords2.X = (float)(((RadiusBase) * Math.Sin(theta) * Math.Cos(phi)) + MAP.XSize / 2f);
+        //    coords2.Y = (float)((RadiusBase) * Math.Sin(theta) * Math.Sin(phi));
+        //    coords2.Z = (float)(((RadiusBase) * Math.Cos(theta)) + MAP.ZSize / 2f);
+        //    return coords2;
+        //}
 
         /// <summary>
         /// Allows the game to perform any initialization it needs to before starting to run.
@@ -91,48 +121,14 @@ namespace SSD
             _renderer.addModel("e_one", "Models\\e_one");
             _renderer.addModel("nebula", "Models\\nebula_bg");
             _renderer.addModel("bullet", "Models\\bullet");
-            //_renderer.addModel("testPlane", "Models\\testPlane");
 
             //Create entities
-            _entities.Add("player", new Entity(new Vector3(0, 4000f, 0), _renderer.getModel("playerShip"), 5f, 90));
-            _entities.Add("player2", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 80, 10));
-            _entities.Add("player3", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 70, 20));
-            _entities.Add("player4", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 60, 30));
-            _entities.Add("player5", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 50, 40));
-            _entities.Add("player6", new Entity(new Vector3(0, 3900f, 0), _renderer.getModel("playerShip"), 5f, 40, 50));
+            _entities.Add("player", new Entity(new Vector3(0, 3500f, 0), _renderer.getModel("playerShip"), 5f, 90));
+
             _entities.Add("e_one",    new Entity((Matrix.CreateTranslation(0, 3500f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 1f));
             _entities.Add("universe", new Entity(Vector3.Zero, _renderer.getModel("spaceSphere"), 100f));
             _entities.Add("world",    new Entity(Vector3.Zero, _renderer.getModel("worldSphere"), 40f, 0, 90));
-            _entities.Add("nebula",   new Entity(new Vector3(10000f, 4500f, 0), _renderer.getModel("nebula"), 10f));
 
-            ////_renderer.getModel("e_one").setScale(1f);
-            ////Matrix shipPos = Matrix.CreateTranslation(0, 3500f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90));
-            ////_renderer.getModel("e_one").setPosition(shipPos.Translation);
-
-            ////_renderer.getModel("playerShip").setScale(5f);
-            ////_renderer.getModel("playerShip").setPosition(0, 4500f, 0);
-            //////_renderer.getModel("playerShip").setYaw(90);
-
-            ////_renderer.getModel("spaceSphere").setScale(100f);
-
-            //////_renderer.getModel("testPlane").setScale(4f);
-            //////_renderer.getModel("testPlane").setPosition(0, -1000f, 0);
-
-            ////_renderer.getModel("worldSphere").setScale(40f); //40
-            ////_renderer.getModel("worldSphere").addPitch(90);
-
-            ////_renderer.getModel("nebula").setScale(10f); //40
-            ////_renderer.getModel("nebula").setPosition(10000f, 4500f, 0);
-
-            ////_renderer.getModel("bullet").setScale(1f); //40
-            //////_renderer.getModel("bullet").setPosition(0, 4500f, 0);
-
-
-
-
-            //myCamera = new Camera(playerEntity.getMatrix().Translation + playerEntity.getMatrix().Up * 1000,
-            //                      playerEntity.getMatrix().Translation,
-            //                      Vector3.Left/* _renderer.getModel("playerShip").getMatrix().Forward */);
 
         }
 
@@ -163,36 +159,95 @@ namespace SSD
                 Entity spaceSphere = getEntity("universe");
                 Entity playerShip = getEntity("player");
 
-                double angle = Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X);
-                getEntity("player").setYaw(MathHelper.ToDegrees(0));
+                float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X));
+                getEntity("player").setYaw(0);
                 camUp = getEntity("player").getMatrix().Left;
-                getEntity("player").setYaw((MathHelper.ToDegrees((float)angle)));
+                getEntity("player").setYaw(angle);
 
+                Debug.WriteLine(angle);
 
                 playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * 0.01f));
                 playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * 0.01f));
-
-
             }
+
+            if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) ||
+                Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S) ||
+                Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A) ||
+                Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
+            {
+                Entity playerShip = getEntity("player");
+                getEntity("player").setYaw(0);
+                camUp = getEntity("player").getMatrix().Left;
+
+                if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.0075f));
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.0075f));
+                    getEntity("player").setYaw(135);
+                }
+                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.0075f));
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.0075f));
+                    getEntity("player").setYaw(45);
+                } 
+                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.0075f));
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.0075f));
+                    getEntity("player").setYaw(-135);
+                }
+                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.0075f));
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.0075f));
+                    getEntity("player").setYaw(-45);
+                } 
+                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.01f));
+                    getEntity("player").setYaw(90);
+                }
+                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.01f));
+                    getEntity("player").setYaw(-90);
+                }
+                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.01f));
+                    getEntity("player").setYaw(180);
+                }
+                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
+                {
+                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.01f));
+                    getEntity("player").setYaw(0);
+                }
+            }
+
 
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y != 0)
             {
-                double angle = Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y * -1, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X * -1);
-                angle -= 90;
-                //Console.WriteLine(angle);
+                float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
 
-                //Random ran = new Random();
-                //string bulletName = "bullet" + ran.Next(50000);
-                //while (getEntity(bulletName) != null)
-                //{
-                //    bulletName = "bullet" + ran.Next(50000);
-                //}
-                //_entities.Add(bulletName, new Entity(getEntity("player").getMatrix().Translation, _renderer.getModel("bullet"), 5f, 0, 0));
+                float oldYaw = MathHelper.ToDegrees(getEntity("player").getYaw());
+                getEntity("player").setYaw(0);
+                Quaternion playerRotation = getEntity("player").getRotation();
+                getEntity("player").setYaw(oldYaw);
+                //playerRotation *= Quaternion.CreateFromAxisAngle(getEntity("player").getMatrix().Up, MathHelper.ToRadians(angle + 90));
 
+                float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
 
-                _bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, (float)angle, _renderer.getModel("bullet")));
-                //Debug.WriteLine(getEntity("player").getMatrix().Translation);
+                _bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("bullet")));
+            }
 
+            if (Mouse.GetState().LeftButton == ButtonState.Pressed)
+            {
+                float angle = MathHelper.ToDegrees((float)Math.Atan2(Mouse.GetState().Y - graphics.PreferredBackBufferHeight / 2, Mouse.GetState().X - graphics.PreferredBackBufferWidth / 2));
+
+                Debug.WriteLine(Mouse.GetState().X);
+
+                //_bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, angle + 90, _renderer.getModel("bullet")));
             }
 
             #endregion
@@ -200,32 +255,13 @@ namespace SSD
 
             foreach (Bullet bul in _bullets)
             {
-                bul.update();
-                //bul.setPosition(getEntity("player").getMatrix().Translation);
+                bul.update(gameTime.ElapsedGameTime);
             }
 
-            //Rotate the planet
-            getEntity("world").addRoll(0.1f);
-            getEntity("world").addYaw(0.05f);
+            _bullets.RemoveAll(removeBullets);
 
             getEntity("universe").addRoll(-0.1f);
             getEntity("universe").addYaw(-0.05f);
-
-            //_renderer.getModel("e_one").addYaw(1);
-            getEntity("e_one").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(getEntity("e_one").getMatrix().Backward), 0.01f));
-            getEntity("e_one").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(getEntity("e_one").getMatrix().Left), 0.01f));
-
-            getEntity("player2").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(getEntity("player2").getMatrix().Left), 0.01f));
-            getEntity("player3").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(getEntity("player3").getMatrix().Left), 0.01f));
-            getEntity("player4").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(getEntity("player4").getMatrix().Left), 0.01f));
-            getEntity("player5").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(getEntity("player5").getMatrix().Left), 0.01f));
-            getEntity("player6").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(getEntity("player6").getMatrix().Left), 0.01f));
-
-            //_renderer.getModel("e_one").applyMatrix(Matrix.CreateFromAxisAngle(Vector3.Normalize(_renderer.getModel("e_one").getMatrix().Down), 0.01f));
-
-            //Quaternion cameraOriantaion = Quaternion.CreateFromRotationMatrix(getEntity("player").getMatrix());
-            //cameraPosition = Matrix.CreateTranslation(new Vector3(0, 1000, -1000) + _renderer.getModel("playerShip").getPosition());
-            //cameraPosition = Matrix.CreateTranslation(new Vector3(0, 1000, -1000) + getEntity("player").getPosition());
 
             base.Update(gameTime);
         }
@@ -248,58 +284,17 @@ namespace SSD
             GraphicsDevice.Clear( ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-            // Copy any parent transforms. (From bones)
-
-            //Matrix[] transforms = new Matrix[myModel.getModel().Bones.Count];
-            //myModel.getModel().CopyAbsoluteBoneTransformsTo(transforms);            
-
-            
-            //GraphicsDevice.BlendState = BlendState.AlphaBlend;
-
-            //GraphicsDevice.BlendState = BlendState.AlphaBlend;
-            //GraphicsDevice.DepthStencilState = DepthStencilState.None;
-            //GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
-            //GraphicsDevice.SamplerStates[0] = SamplerState.LinearClamp;
-
-            //GraphicsDevice.BlendState = BlendState.Opaque;
-            //GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            //GraphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
-
             Viewport viewport = graphics.GraphicsDevice.Viewport;
             float aspectRatio = viewport.AspectRatio;
 
-
-            //Matrix view = Matrix.CreateLookAt(_renderer.getModel("playerShip").getMatrix().Translation + (_renderer.getModel("playerShip").getMatrix().Up * 500),
-            //                      _renderer.getModel("playerShip").getMatrix().Translation, _renderer.getModel("playerShip").getMatrix().Left);
-
             Vector3 cameraPosition = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Up * 1000;
             Vector3 cameraTarget = getEntity("player").getMatrix().Translation;
-
-            //Vector3 cameraUp = _renderer.getModel("playerShip").getMatrix().Forward;
-
-            //Vector3 cameraUp = new Vector3(-1, 0, 0);
-            //Vector3 cameraUp = Vector3.Transform(cameraPosition - cameraTarget, Matrix.CreateRotationX(90));
-
-            //Vector3 cameraUp = _renderer.getModel("playerShip").getMatrix().Forward;
             camUp.Normalize();
 
             Matrix view = Matrix.CreateLookAt(cameraPosition, cameraTarget, camUp);
-
-            //Vector3 campos = cameraPosition.Translation;
-
-            //Matrix view = Matrix.CreateLookAt(cameraPosition.Translation, _renderer.getModel("playerShip").getMatrix().Translation, new Vector3(1, 0, 0));
-
-            //myCamera.setLookAt(_renderer.getModel("playerShip").getMatrix().Translation);
-            //myCamera.setPosition(_renderer.getModel("playerShip").getMatrix().Translation + _renderer.getModel("playerShip").getMatrix().Up * 1000);
-
-            //myCamera.Roll(0.0001f);
-            //Matrix view = myCamera.getLookAt();
-
             Matrix proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspectRatio, 1.0f, 50000.0f);
 
             //Render all models that are loaded in.
-            //_renderer.renderAllModels(view, proj);
-
             foreach(KeyValuePair<string, Entity> entity in _entities)
             {
                 _renderer.renderEntity(view, proj, entity.Value);
