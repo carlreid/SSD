@@ -2,12 +2,16 @@
 using System;
 using System.Diagnostics;
 
+using DPSF;
+using DPSF.ParticleSystems;
+using Microsoft.Xna.Framework.Graphics;
+
 namespace SSD
 {
     class Bullet : Entity
     {
         public Bullet(Vector3 position, Quaternion rotation, float yaw, ModelContainer bulletModel)
-            : base(position, bulletModel, 1, yaw)
+            : base(position, bulletModel, 1f, yaw)
         {
             //_position = startMatrix.Translation;
             //_direction = new Vector3((float)Math.Sin(yaw), (float)Math.Cos(yaw), 0);
@@ -16,7 +20,7 @@ namespace SSD
             base.addRotation(rotation);
 
             _curAngle = 0;
-            _angleModifier = 0.5f;
+            _angleModifier = 1.5f;
             _timeTillDeath = 1000;
             _isAlive = true;
         }
@@ -40,12 +44,12 @@ namespace SSD
 
             _curAngle += _angleModifier;
 
-            if (_angleModifier > 0.05f)
+            if (_angleModifier > 0.5f)
             {
                 _angleModifier -= 0.018f;
-                if (_angleModifier < 0.05f)
+                if (_angleModifier < 0.5f)
                 {
-                    _angleModifier = 0.05f;
+                    _angleModifier = 0.5f;
                 }
             }
             
@@ -55,6 +59,8 @@ namespace SSD
             {
                 _isAlive = false;
             }
+
+            base.update();
         }
 
         public bool getAlive()
@@ -70,7 +76,6 @@ namespace SSD
 
         float _curAngle;
         float _angleModifier;
-
         //Vector3 _position;
     }
 }

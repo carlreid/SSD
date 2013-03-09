@@ -43,7 +43,7 @@ namespace DPSF.ParticleSystems
         {
             InitializeSpriteParticleSystem(cGraphicsDevice, cContentManager, 1000, 50000, "Textures/Smoke", cSpriteBatch);
             LoadSmokeEvents();
-            Emitter.ParticlesPerSecond = 50;
+            Emitter.ParticlesPerSecond = 100;
             Name = "Smoke";
         }
 
@@ -62,27 +62,27 @@ namespace DPSF.ParticleSystems
         // Used to generate a single smoke plume
         public void InitializeParticleRisingSmoke(DefaultSprite3DBillboardParticle cParticle)
         {
-            cParticle.Lifetime = RandomNumber.Between(1.0f, 7.0f);
+            cParticle.Lifetime = RandomNumber.Between(0.5f, 2.0f);
 
             cParticle.Position = Emitter.PositionData.Position;
             cParticle.Position += new Vector3(0, 10, 0);
-            cParticle.Size = RandomNumber.Next(30, 55);
+            cParticle.Size = RandomNumber.Next(5, 15);
             cParticle.Color = msaColors[miCurrentColor];
             cParticle.Rotation = RandomNumber.Between(0, MathHelper.TwoPi);
 
-            cParticle.Velocity = new Vector3(RandomNumber.Next(-15, 15), RandomNumber.Next(10, 30), RandomNumber.Next(-15, 15));
+            cParticle.Velocity = new Vector3(RandomNumber.Next(-15, 15), RandomNumber.Next(-30, 0), RandomNumber.Next(-15, 15));
             cParticle.Acceleration = Vector3.Zero;
             cParticle.RotationalVelocity = RandomNumber.Between(-MathHelper.Pi, MathHelper.Pi);
 
             cParticle.StartSize = cParticle.Size;
 
-            mfColorBlendAmount = 0.5f;
+            mfColorBlendAmount = 0f;
         }
 
         // Used to generate random smoke particles around the floor
         public void InitializeParticleFoggySmoke(DefaultSprite3DBillboardParticle cParticle)
         {
-            cParticle.Lifetime = RandomNumber.Between(1.0f, 3.0f);
+            cParticle.Lifetime = RandomNumber.Between(0.5f, 2.0f);
 
             cParticle.Position = Emitter.PositionData.Position;
             cParticle.Position += new Vector3(RandomNumber.Next(-500, 500), 0, RandomNumber.Next(-500, 500));

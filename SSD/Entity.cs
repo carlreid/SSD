@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace SSD
 {
@@ -17,6 +18,9 @@ namespace SSD
             _yaw = MathHelper.ToRadians(yaw);
             _pitch = MathHelper.ToRadians(pitch);
             _roll = MathHelper.ToRadians(roll);
+
+            _boundingSphere = new BoundingSphere(_position, scale);
+
         }
 
         virtual public Matrix getMatrix()
@@ -32,6 +36,14 @@ namespace SSD
 
             //transform *= _matrix;
             return transform;
+        }
+
+        virtual public void update()
+        {
+            foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
+            {
+                updateBoundingSphere(getMatrix().Translation, mesh.BoundingSphere.Radius * _scale);
+            }
         }
 
         //public Matrix getTransformMatrix()
@@ -149,9 +161,15 @@ namespace SSD
             return _scale;
         }
 
+        public void updateBoundingSphere(Vector3 position, float radius){
+            _boundingSphere.Radius = radius;
+            _boundingSphere.Center = position;
+        }
 
-        
-
+        public BoundingSphere getBoundingSphere()
+        {
+            return _boundingSphere;
+        }
 
         ModelContainer _model;
         //Matrix _matrix;
@@ -159,6 +177,7 @@ namespace SSD
         float _yaw;
         float _pitch;
         float _roll;
+        BoundingSphere _boundingSphere;
 
         //Vector3 _orbitPosition;
         //Quaternion _orbitRotation;

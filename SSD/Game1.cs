@@ -31,10 +31,10 @@ namespace SSD
         Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
 
         List<Bullet> _bullets = new List<Bullet>();
-        float _lastBulletAngle = 0;
 
         // Declare our Particle System variable
-        SmokeParticleSystem shipExaustParticles = null;
+        TrailParticleSystem shipExaustParticles = null;
+        SmokeParticleSystem bulletSmokeParticles = null;
 
         public Game1()
         {
@@ -108,11 +108,16 @@ namespace SSD
         /// </summary>
         protected override void LoadContent()
         {
-            // Declare a new Particle System instance and Initialize it
-            shipExaustParticles = new SmokeParticleSystem(this);
-            shipExaustParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
-            
 
+            BoundingSphereRenderer.InitializeGraphics(GraphicsDevice, 30);
+
+            // Declare a new Particle System instance and Initialize it
+            shipExaustParticles = new TrailParticleSystem(this);
+            shipExaustParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+
+            bulletSmokeParticles = new SmokeParticleSystem(this);
+            bulletSmokeParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+            bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
 
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -129,7 +134,7 @@ namespace SSD
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
 
             //Load models
-            _renderer.addModel("playerShip", "Models\\space_frigate");
+            _renderer.addModel("playerShip", "Models\\player_ship");
             _renderer.addModel("worldSphere", "Models\\burning_planet");
             _renderer.addModel("spaceSphere", "Models\\space_sphere");
             _renderer.addModel("e_one", "Models\\e_one");
@@ -137,11 +142,11 @@ namespace SSD
             _renderer.addModel("bullet", "Models\\bullet");
 
             //Create entities
-            _entities.Add("player", new Entity(new Vector3(0, 2000f, 0), _renderer.getModel("playerShip"), 1f, 90));
+            _entities.Add("player", new Entity(new Vector3(0, 400f, 0), _renderer.getModel("playerShip"), 1f, 90));
 
             _entities.Add("e_one",    new Entity((Matrix.CreateTranslation(0, 1500f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 1f));
             _entities.Add("universe", new Entity(Vector3.Zero, _renderer.getModel("spaceSphere"), 100f));
-            _entities.Add("world",    new Entity(Vector3.Zero, _renderer.getModel("worldSphere"), 20f, 0, 90));
+            _entities.Add("world",    new Entity(Vector3.Zero, _renderer.getModel("worldSphere"), 10f, 0, 90));
 
         }
 
@@ -154,6 +159,7 @@ namespace SSD
             // TODO: Unload any non ContentManager content here
 
             shipExaustParticles.Destroy();
+            bulletSmokeParticles.Destroy();
         }
 
         /// <summary>
@@ -252,11 +258,8 @@ namespace SSD
                 //playerRotation *= Quaternion.CreateFromAxisAngle(getEntity("player").getMatrix().Up, MathHelper.ToRadians(angle + 90));
 
                 float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
-                float angleDiff = calcYaw - _lastBulletAngle;
-                Debug.WriteLine(angleDiff);
-                _lastBulletAngle = calcYaw;
 
-                _bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, playerRotation, calcYaw - angleDiff, _renderer.getModel("bullet")));
+                _bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("bullet")));
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
@@ -270,18 +273,25 @@ namespace SSD
 
             #endregion
 
+            foreach (KeyValuePair<String, Entity> entity in _entities){
+                entity.Value.update();
+            }
 
             foreach (Bullet bul in _bullets)
             {
                 bul.update(gameTime.ElapsedGameTime);
+                bulletSmokeParticles.Emitter.PositionData.Position = bul.getMatrix().Translation;
+                bulletSmokeParticles.AddParticle();
             }
 
             _bullets.RemoveAll(removeBullets);
 
-            shipExaustParticles.Emitter.PositionData.Position = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Backward * 40; ;
+            shipExaustParticles.Emitter.PositionData.Position = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Backward * 10; ;
 
-            getEntity("universe").addRoll(-0.1f);
-            getEntity("universe").addYaw(-0.05f);
+            getEntity("universe").addRoll(-0.001f);
+            getEntity("universe").addYaw(-0.005f);
+            getEntity("world").addRoll(0.02f);
+            getEntity("world").addPitch(0.05f);
 
             base.Update(gameTime);
         }
@@ -307,7 +317,7 @@ namespace SSD
             Viewport viewport = graphics.GraphicsDevice.Viewport;
             float aspectRatio = viewport.AspectRatio;
 
-            Vector3 cameraPosition = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Up * 2000;
+            Vector3 cameraPosition = getEntity("player").getMatrix().Translation + getEntity("player").getMatrix().Up * 500;
             Vector3 cameraTarget = getEntity("player").getMatrix().Translation;
             camUp.Normalize();
 
@@ -327,12 +337,18 @@ namespace SSD
 
             // Set the Particle System's World, View, and Projection matrices so that it knows how to draw the particles properly.
             shipExaustParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
+            bulletSmokeParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
 
             // Update the Particle System
             shipExaustParticles.SetCameraPosition(cameraPosition);
             shipExaustParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
+            bulletSmokeParticles.SetCameraPosition(cameraPosition);
+            bulletSmokeParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
             shipExaustParticles.Draw();
+            bulletSmokeParticles.Draw();
+            
 
             //Draw 2D things
             spriteBatch.Begin();

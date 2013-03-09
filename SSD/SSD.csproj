@@ -75,12 +75,15 @@
     <Reference Include="System.Net" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoundingSphereRenderer.cs" />
     <Compile Include="Bullet.cs" />
     <Compile Include="Camera.cs" />
     <Compile Include="Draw.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="ModelContainer.cs" />
+    <Compile Include="Particle Systems\QuadSprayPS.cs" />
     <Compile Include="Particle Systems\SmokePS.cs" />
+    <Compile Include="Particle Systems\TrailPS.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Game1.cs" />

@@ -106,6 +106,9 @@ namespace SSD
                             effect.View = view;
                             effect.Projection = proj;
                         }
+
+                        //BoundingSphereRenderer.Render(entity.getBoundingSphere(), _graphicsDevice, view, proj, Color.Red);
+                        
                         mesh.Draw();
                     }
                 }
