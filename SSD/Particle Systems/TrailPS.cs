@@ -28,8 +28,8 @@ namespace DPSF.ParticleSystems
         public Color TrailStartColor = Color.Blue;
         public Color TrailEndColor = Color.Cyan;
 
-        public int TrailStartSize = 5;
-        public int TrailEndSize = 40;
+        public int TrailStartSize = 20;
+        public int TrailEndSize = 5;
 
         /// <summary>
         /// Adjust the scale to produce more or less particles.
@@ -71,7 +71,7 @@ namespace DPSF.ParticleSystems
 
         public void InitializeParticleTrail(DefaultTexturedQuadParticle cParticle)
         {
-            cParticle.Lifetime = 4.0f;
+            cParticle.Lifetime = 2.0f;
 
             cParticle.Position = Emitter.PositionData.Position;
             cParticle.StartSize = cParticle.Size = TrailStartSize;
@@ -102,12 +102,12 @@ namespace DPSF.ParticleSystems
             Emitter.ParticlesPerSecond = 10;
 
             TrailStartColor = Color.Red;
-            TrailEndColor = Color.Cyan;
-            TrailStartSize = 5;
-            TrailEndSize = 40;
+            TrailEndColor = Color.Yellow;
+            TrailStartSize = 30;
+            TrailEndSize = 5;
             SetTexture("Textures/Particle");
 
-            NumberOfParticlesToEmitScale = 0.2f;
+            NumberOfParticlesToEmitScale = 0.05f;
         }
 
         public void LoadSpinningTrailParticleSystem()

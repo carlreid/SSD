@@ -1,9 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace SSD
 {
-    class Entity
+    abstract class Entity
     {
 
         public Entity(Vector3 position, ModelContainer model, float scale = 1, float yaw = 0, float pitch = 0, float roll = 0)
@@ -18,8 +19,8 @@ namespace SSD
             _yaw = MathHelper.ToRadians(yaw);
             _pitch = MathHelper.ToRadians(pitch);
             _roll = MathHelper.ToRadians(roll);
-
-            _boundingSphere = new BoundingSphere(_position, scale);
+            _isAlive = true;
+            //_boundingSphere = new BoundingSphere(_position, scale);
 
         }
 
@@ -38,11 +39,47 @@ namespace SSD
             return transform;
         }
 
-        virtual public void update()
+        virtual public void update(TimeSpan deltaTime)
+        {
+            //foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
+            //{
+            //    updateBoundingSphere(getMatrix().Translation, mesh.BoundingSphere.Radius * _scale);
+            //}
+        }
+
+        virtual public void draw(Matrix view, Matrix proj, GraphicsDevice graphicsDevice)
         {
             foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
             {
-                updateBoundingSphere(getMatrix().Translation, mesh.BoundingSphere.Radius * _scale);
+                foreach (ModelMeshPart meshPart in mesh.MeshParts)
+                {
+                    foreach (BasicEffect effect in mesh.Effects)
+                    {
+                        effect.World = getModelContainer().getBoneTransform(mesh.ParentBone.Index) * getMatrix();
+                        effect.View = view;
+                        effect.Projection = proj;
+
+                        //effect.LightingEnabled = true; // turn on the lighting subsystem.
+                        //effect.DirectionalLight0.Enabled = true;
+                        //effect.DirectionalLight1.Enabled = true;
+                        //effect.DirectionalLight2.Enabled = true;
+
+                        //effect.DirectionalLight0.DiffuseColor = new Vector3(0.5f, 0, 0); // a red light
+                        //effect.DirectionalLight0.Direction = new Vector3(1, 0, 0);  // coming along the x-axis
+                        //effect.DirectionalLight0.SpecularColor = new Vector3(0, 1, 0); // with green highlights
+
+                        //effect.DirectionalLight1.DiffuseColor = new Vector3(0, 0.5f, 0); // a red light1
+                        //effect.DirectionalLight1.Direction = new Vector3(0, 1, 0);  // coming along the x-axis
+                        //effect.DirectionalLight1.SpecularColor = new Vector3(0, 1, 0); // with green highlights
+
+                        //effect.DirectionalLight2.DiffuseColor = new Vector3(0, 0, 0.5f); // a red light
+                        //effect.DirectionalLight2.Direction = new Vector3(0, 0, 1);  // coming along the x-axis
+                        //effect.DirectionalLight2.SpecularColor = new Vector3(0, 1, 0); // with green highlights
+
+                    }
+                    //BoundingSphereRenderer.Render(entity.getBoundingSphere(), _graphicsDevice, view, proj, Color.Red);
+                    mesh.Draw();
+                }
             }
         }
 
@@ -161,15 +198,25 @@ namespace SSD
             return _scale;
         }
 
-        public void updateBoundingSphere(Vector3 position, float radius){
-            _boundingSphere.Radius = radius;
-            _boundingSphere.Center = position;
+        public void setAlive(bool isAlive)
+        {
+            _isAlive = isAlive;
         }
 
-        public BoundingSphere getBoundingSphere()
+        public bool getAlive()
         {
-            return _boundingSphere;
+            return _isAlive;
         }
+
+        //public void updateBoundingSphere(Vector3 position, float radius){
+        //    _boundingSphere.Radius = radius;
+        //    _boundingSphere.Center = position;
+        //}
+
+        //public BoundingSphere getBoundingSphere()
+        //{
+        //    return _boundingSphere;
+        //}
 
         ModelContainer _model;
         //Matrix _matrix;
@@ -177,7 +224,8 @@ namespace SSD
         float _yaw;
         float _pitch;
         float _roll;
-        BoundingSphere _boundingSphere;
+        //BoundingSphere _boundingSphere;
+        bool _isAlive;
 
         //Vector3 _orbitPosition;
         //Quaternion _orbitRotation;

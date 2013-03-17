@@ -83,35 +83,7 @@ namespace SSD
 
         public void renderEntity(Matrix view, Matrix proj, Entity entity)
         {
-                foreach (ModelMesh mesh in entity.getModelContainer().getModel().Meshes)
-                {
-                    foreach (ModelMeshPart meshPart in mesh.MeshParts)
-                    {
-                        foreach (BasicEffect effect in mesh.Effects)
-                        {
-                            //if (modelEntry.Key == "nebula")
-                            //{
-                            //    _graphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
-                            //}
-                            //else
-                            //{
-                            //    _graphicsDevice.DepthStencilState.DepthBufferWriteEnable = false;
-                            //}
-
-                            //effect.EnableDefaultLighting();
-                            //effect.PreferPerPixelLighting = true;
-
-
-                            effect.World = entity.getModelContainer().getBoneTransform(mesh.ParentBone.Index) * entity.getMatrix();
-                            effect.View = view;
-                            effect.Projection = proj;
-                        }
-
-                        //BoundingSphereRenderer.Render(entity.getBoundingSphere(), _graphicsDevice, view, proj, Color.Red);
-                        
-                        mesh.Draw();
-                    }
-                }
+            entity.draw(view, proj, _graphicsDevice);
         }
 
         public void addModel(String modelName, String filePath)

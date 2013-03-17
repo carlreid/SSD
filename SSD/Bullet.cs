@@ -8,21 +8,17 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SSD
 {
-    class Bullet : Entity
+    class Bullet : ModelEntity
     {
         public Bullet(Vector3 position, Quaternion rotation, float yaw, ModelContainer bulletModel)
             : base(position, bulletModel, 1f, yaw)
         {
-            //_position = startMatrix.Translation;
-            //_direction = new Vector3((float)Math.Sin(yaw), (float)Math.Cos(yaw), 0);
-            //_directionYaw = yaw;
-
             base.addRotation(rotation);
 
             _curAngle = 0;
             _angleModifier = 1.5f;
             _timeTillDeath = 1000;
-            _isAlive = true;
+            _damage = 100;
         }
 
         override public Matrix getMatrix()
@@ -39,7 +35,7 @@ namespace SSD
             return transform;
         }
 
-        public void update(TimeSpan deltaTime)
+        override public void update(TimeSpan deltaTime)
         {
 
             _curAngle += _angleModifier;
@@ -57,25 +53,35 @@ namespace SSD
             _timeTillDeath -= deltaTime.Milliseconds;
             if (_timeTillDeath <= 0)
             {
-                _isAlive = false;
+                base.setAlive(false);
             }
 
-            base.update();
+            base.update(deltaTime);
         }
 
-        public bool getAlive()
+        public int getDamage()
         {
-            return _isAlive;
+            return _damage;
         }
+
+        public void setDamage(int amountOfDamage)
+        {
+            _damage = amountOfDamage;
+        }
+
+        //public bool getAlive()
+        //{
+        //    return _isAlive;
+        //}
 
         //float _velocity;
         Vector3 _direction;
         float _directionYaw;
         float _timeTillDeath;
-        bool _isAlive;
 
         float _curAngle;
         float _angleModifier;
         //Vector3 _position;
+        int _damage;
     }
 }
