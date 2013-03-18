@@ -24,13 +24,21 @@ namespace SSD
         SpriteBatch spriteBatch;
         SpriteFont _hudFont;
 
+        SoundEffect _missileSound;
+        SoundEffectInstance _missileSoundEffectInstance;
+
+        //AudioEmitter emitter = new AudioEmitter();
+        //AudioListener listener = new AudioListener();
+        SoundManager _soundManager;
+
         float aspectRatio;
+        float _lastBulletShot = 0;
 
         Draw _renderer;
         Vector3 camUp = Vector3.Left;
         //Entity playerEntity;
 
-        Entity _playerOne;
+        PlayerEntity _playerOne;
         Entity _universe;
         Entity _planet;
 
@@ -138,6 +146,11 @@ namespace SSD
             graphics.PreferMultiSampling = true;
             graphics.ApplyChanges();
 
+            //_missileSound = Content.Load<SoundEffect>("missile_sound");
+            //_missileSoundEffectInstance = _missileSound.CreateInstance();
+            //_missileSoundEffectInstance.Apply3D(listener, emitter);
+            //_missileSoundEffectInstance.IsLooped = true; //For testing
+            //_missileSoundEffectInstance.Play();
 
             _renderer = new Draw(graphics.GraphicsDevice, Content);
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
@@ -152,7 +165,7 @@ namespace SSD
 
             //Create entities
             _worldEntities.Add(new PlayerEntity(new Vector3(0, 400f, 0), _renderer.getModel("playerShip"), 1f, 90));
-            _playerOne = _worldEntities[_worldEntities.Count - 1];
+            _playerOne = (PlayerEntity)_worldEntities[_worldEntities.Count - 1];
 
             _worldEntities.Add(new Planet(Vector3.Zero, _renderer.getModel("worldSphere"), 10f, 0, 90));
             _planet = _worldEntities[_worldEntities.Count - 1];
@@ -161,6 +174,9 @@ namespace SSD
             _universe = _worldEntities[_worldEntities.Count - 1];
 
             _worldEntities.Add(new EnemyEntity((Matrix.CreateTranslation(0, 400f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 0.1f));
+
+            //Setup audio
+            _soundManager = new SoundManager(Content, _playerOne);
         }
 
         /// <summary>
@@ -186,6 +202,11 @@ namespace SSD
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
+            if (GamePad.GetState(PlayerIndex.One).Buttons.LeftShoulder == ButtonState.Pressed)
+            {
+                _playerOne.useBoost();
+            }
+
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y != 0)
             {
                 float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X));
@@ -195,8 +216,8 @@ namespace SSD
 
                 //Debug.WriteLine(angle);
 
-                _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * 0.01f));
-                _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * 0.01f));
+                _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * _playerOne.getSpeed()));
+                _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * _playerOne.getSpeed()));
             }
 
             if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) ||
@@ -257,17 +278,23 @@ namespace SSD
 
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y != 0)
             {
-                float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
+                if (_lastBulletShot <= 0)
+                {
+                    float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
 
-                float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
-                _playerOne.setYaw(0);
-                Quaternion playerRotation = _playerOne.getRotation();
-                _playerOne.setYaw(oldYaw);
-                //playerRotation *= Quaternion.CreateFromAxisAngle(getEntity("player").getMatrix().Up, MathHelper.ToRadians(angle + 90));
+                    float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
+                    _playerOne.setYaw(0);
+                    Quaternion playerRotation = _playerOne.getRotation();
+                    _playerOne.setYaw(oldYaw);
+                    //playerRotation *= Quaternion.CreateFromAxisAngle(getEntity("player").getMatrix().Up, MathHelper.ToRadians(angle + 90));
 
-                float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
+                    float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
 
-                _worldEntities.Add(new Bullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("bullet")));
+                    Bullet newBullet = new Bullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("bullet"));
+                    _worldEntities.Add(newBullet);
+                    _soundManager.addAttatchment(LoadedSounds.ROCKET_SOUND, newBullet);
+                    _lastBulletShot = 150;
+                }
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
@@ -307,6 +334,16 @@ namespace SSD
                         {
                             //Cast to get functionality
                             ModelEntity checkEntity = (ModelEntity)_worldEntities[nextEntity];
+
+                            //Do a check to see if either have been flagged dead as they may have collided so no point re-checking.
+                            if (currentEntity.getAlive() == false)
+                            {
+                                break; //Quit this inner for loop, no point checking the rest.
+                            }
+                            if (checkEntity.getAlive() == false)
+                            {
+                                continue; //Continue to next entity in this loop.
+                            }
 
                             //Check to see if the entity we're chacking is hostile (is an enemy..)
                             if (currentEntity.getFriendly() == false || checkEntity.getFriendly() == false)
@@ -367,6 +404,13 @@ namespace SSD
             _universe.addYaw(-0.005f);
             _planet.addRoll(0.02f);
             _planet.addPitch(0.05f);
+
+            _soundManager.update();
+
+            if (_lastBulletShot > 0)
+            {
+                _lastBulletShot -= gameTime.ElapsedGameTime.Milliseconds;
+            }
 
             base.Update(gameTime);
         }
