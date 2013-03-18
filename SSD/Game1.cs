@@ -177,6 +177,7 @@ namespace SSD
 
             //Setup audio
             _soundManager = new SoundManager(Content, _playerOne);
+
         }
 
         /// <summary>

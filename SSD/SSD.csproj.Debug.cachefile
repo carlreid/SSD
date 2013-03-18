@@ -10,6 +10,7 @@ Content\Textures\Smoke.xnb
 Content\Textures\Particle.xnb
 Content\Textures\MoveArrow.xnb
 Content\DebugFont.xnb
+Content\hudFont.xnb
 Content\myEffect.xnb
 Content\Models\space_sphere.xnb
 Content\Models\e_one.xnb
@@ -18,10 +19,12 @@ Content\Models\nebula_bg.xnb
 Content\Models\bullet.xnb
 Content\Models\burning_planet.xnb
 Content\Models\player_ship.xnb
+Content\missile_sound.xnb
 Content\Models\space_art_0.xnb
 Content\Models\nebula_0.xnb
 Content\Models\metalBullTexture_0.xnb
 Content\Models\planet_texture_0.xnb
 Content\space_frigate_6\space_frigate_6_color_0.xnb
-Content\hudFont.xnb
-Content\missile_sound.xnb
+Content\XACTProject.xgs
+Content\BulletWaveBank.xwb
+Content\BulletSoundBank.xsb

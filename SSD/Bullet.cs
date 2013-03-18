@@ -38,7 +38,7 @@ namespace SSD
         override public void update(TimeSpan deltaTime)
         {
 
-            //_curAngle += _angleModifier;
+            _curAngle += _angleModifier;
 
             if (_angleModifier > 0.5f)
             {
