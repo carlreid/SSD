@@ -17,7 +17,7 @@ namespace SSD
 
         public override void draw(Matrix view, Matrix proj, GraphicsDevice graphicsDevice)
         {
-            BoundingSphereRenderer.Render(getBoundingSphere(), graphicsDevice, view, proj, Color.Red);
+            //BoundingSphereRenderer.Render(getBoundingSphere(), graphicsDevice, view, proj, Color.Red);
             base.draw(view, proj, graphicsDevice);
 
         }

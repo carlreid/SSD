@@ -24,12 +24,8 @@ namespace SSD
         SpriteBatch spriteBatch;
         SpriteFont _hudFont;
 
-        SoundEffect _missileSound;
-        SoundEffectInstance _missileSoundEffectInstance;
-
-        //AudioEmitter emitter = new AudioEmitter();
-        //AudioListener listener = new AudioListener();
         SoundManager _soundManager;
+        BloomComponent bloom;
 
         float aspectRatio;
         float _lastBulletShot = 0;
@@ -113,9 +109,23 @@ namespace SSD
         {
             // TODO: Add your initialization logic here
             Window.Title = "Super Stardust Clone";
-            base.Initialize();
 
-            //_renderer = new Draw(graphics.GraphicsDevice, Content);
+            //graphics = new GraphicsDeviceManager(this);
+
+            //Setup the game window
+            graphics.PreferredBackBufferWidth = 1280;
+            graphics.PreferredBackBufferHeight = 720;
+            graphics.IsFullScreen = false;
+            graphics.PreferMultiSampling = true;
+            graphics.ApplyChanges();
+
+            bloom = new BloomComponent(this);
+            bloom.Settings = BloomSettings.PresetSettings[0]; //3
+            bloom.Visible = true;
+
+            Components.Add(bloom);
+
+            base.Initialize();
         }
 
         /// <summary>
@@ -124,7 +134,6 @@ namespace SSD
         /// </summary>
         protected override void LoadContent()
         {
-
             _hudFont = Content.Load<SpriteFont>("hudFont");
 
             BoundingSphereRenderer.InitializeGraphics(GraphicsDevice, 30);
@@ -140,12 +149,7 @@ namespace SSD
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            //Setup the game window
-            graphics.PreferredBackBufferWidth = 1280;
-            graphics.PreferredBackBufferHeight = 720;
-            graphics.IsFullScreen = false;
-            graphics.PreferMultiSampling = true;
-            graphics.ApplyChanges();
+
 
             //_missileSound = Content.Load<SoundEffect>("missile_sound");
             //_missileSoundEffectInstance = _missileSound.CreateInstance();
@@ -436,6 +440,8 @@ namespace SSD
 
             //Console.WriteLine(GraphicsDevice.Adapter.DeviceName.ToString());
 
+            bloom.BeginDraw();
+
             GraphicsDevice.Clear( ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             //graphics.GraphicsDevice.DepthStencilState.DepthBufferEnable = true;
@@ -474,14 +480,15 @@ namespace SSD
             shipExaustParticles.Draw();
             bulletSmokeParticles.Draw();
             
+            base.Draw(gameTime);
 
-            //Draw 2D things
+            //Draw 2D things - AFTER the bloom
             spriteBatch.Begin();
             spriteBatch.DrawString(_hudFont, "Player Health: " + ((ModelEntity)_playerOne).getHealth(), new Vector2(0, 0), Color.Green);
             spriteBatch.End();
 
 
-            base.Draw(gameTime);
+            
         }
     }
 }

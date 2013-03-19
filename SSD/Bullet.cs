@@ -59,6 +59,25 @@ namespace SSD
             base.update(deltaTime);
         }
 
+        public override void draw(Matrix view, Matrix proj, GraphicsDevice graphicsDevice)
+        {
+            foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
+            {
+                foreach (ModelMeshPart meshPart in mesh.MeshParts)
+                {
+                    foreach (BasicEffect effect in mesh.Effects)
+                    {
+                        effect.EmissiveColor = new Vector3(1, 0, 0);
+                        effect.World = getModelContainer().getBoneTransform(mesh.ParentBone.Index) * getMatrix();
+                        effect.View = view;
+                        effect.Projection = proj;
+                    }
+                    //BoundingSphereRenderer.Render(entity.getBoundingSphere(), _graphicsDevice, view, proj, Color.Red);
+                    mesh.Draw();
+                }
+            }
+        }
+
         public int getDamage()
         {
             return _damage;
@@ -75,8 +94,8 @@ namespace SSD
         //}
 
         //float _velocity;
-        Vector3 _direction;
-        float _directionYaw;
+        //Vector3 _direction;
+        //float _directionYaw;
         float _timeTillDeath;
 
         float _curAngle;

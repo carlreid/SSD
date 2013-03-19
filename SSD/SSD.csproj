@@ -76,6 +76,8 @@
     <Reference Include="System.Net" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BloomComponent.cs" />
+    <Compile Include="BloomSettings.cs" />
     <Compile Include="BoundingSphereRenderer.cs" />
     <Compile Include="Bullet.cs" />
     <Compile Include="Camera.cs" />
