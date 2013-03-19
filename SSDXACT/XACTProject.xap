@@ -312,6 +312,8 @@ Sound Bank
     Windows File = Win\BulletSoundBank.xsb;
     Xbox Bank Path Edited = 0;
     Windows Bank Path Edited = 0;
+    Bank Last Modified Low = 3238536800;
+    Bank Last Modified High = 30286866;
     Header Last Modified High = 0;
     Header Last Modified Low = 0;
 

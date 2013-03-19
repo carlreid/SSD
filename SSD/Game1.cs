@@ -41,6 +41,7 @@ namespace SSD
         PlayerEntity _playerOne;
         Entity _universe;
         Entity _planet;
+        Entity _playSphere;
 
         List<Entity> _worldEntities = new List<Entity>();
 
@@ -162,16 +163,20 @@ namespace SSD
             _renderer.addModel("e_one", "Models\\e_one");
             _renderer.addModel("nebula", "Models\\nebula_bg");
             _renderer.addModel("bullet", "Models\\bullet");
+            _renderer.addModel("playSphere", "Models\\play_sphere");
 
             //Create entities
             _worldEntities.Add(new PlayerEntity(new Vector3(0, 400f, 0), _renderer.getModel("playerShip"), 1f, 90));
             _playerOne = (PlayerEntity)_worldEntities[_worldEntities.Count - 1];
 
-            _worldEntities.Add(new Planet(Vector3.Zero, _renderer.getModel("worldSphere"), 10f, 0, 90));
+            _worldEntities.Add(new Planet(Vector3.Zero, _renderer.getModel("worldSphere"), 8f, 0, 90));
             _planet = _worldEntities[_worldEntities.Count - 1];
 
             _worldEntities.Add(new Skybox(Vector3.Zero, _renderer.getModel("spaceSphere"), 100f));
             _universe = _worldEntities[_worldEntities.Count - 1];
+
+            _worldEntities.Add(new PlaySphere(Vector3.Zero, _renderer.getModel("playSphere"), 15f));
+            _playSphere = _worldEntities[_worldEntities.Count - 1];
 
             _worldEntities.Add(new EnemyEntity((Matrix.CreateTranslation(0, 400f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 0.1f));
 
@@ -433,10 +438,13 @@ namespace SSD
 
             GraphicsDevice.Clear( ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            //graphics.GraphicsDevice.DepthStencilState.DepthBufferEnable = true;
+            //graphics.GraphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
 
             Viewport viewport = graphics.GraphicsDevice.Viewport;
             float aspectRatio = viewport.AspectRatio;
 
+            //Vector3 cameraPosition = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Left * 500;
             Vector3 cameraPosition = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Up * 500;
             Vector3 cameraTarget = _playerOne.getMatrix().Translation;
             camUp.Normalize();

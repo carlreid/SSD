@@ -21,6 +21,10 @@ namespace SSD
 
         public void update()
         {
+            if (_entityAttachedTo.getAlive() == false || _entityAttachedTo == null)
+            {
+                _myCue.Stop(AudioStopOptions.Immediate);
+            }
             _emitter.Position = _entityAttachedTo.getMatrix().Translation;
             _myCue.Apply3D(_listner, _emitter);
         }

@@ -10,10 +10,10 @@ namespace SSD
 
         }
 
-        //public override void draw(Matrix view, Matrix proj, Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice)
-        //{
-        //    base.draw(view, proj, graphicsDevice);
-        //}
+        public override void draw(Matrix view, Matrix proj, Microsoft.Xna.Framework.Graphics.GraphicsDevice graphicsDevice)
+        {
+            base.draw(view, proj, graphicsDevice);
+        }
 
         //virtual public void update()
         //{
