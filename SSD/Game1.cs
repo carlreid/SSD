@@ -167,7 +167,8 @@ namespace SSD
             _renderer.addModel("playerShip", "Models\\player_ship");
             _renderer.addModel("worldSphere", "Models\\burning_planet");
             _renderer.addModel("spaceSphere", "Models\\space_sphere");
-            _renderer.addModel("e_one", "Models\\asteroid1");
+            _renderer.addModel("e_rock", "Models\\asteroid1");
+            _renderer.addModel("e_mine", "Models\\mine");
             _renderer.addModel("nebula", "Models\\nebula_bg");
             _renderer.addModel("bullet", "Models\\bullet");
             _renderer.addModel("playSphere", "Models\\play_sphere");
@@ -190,7 +191,7 @@ namespace SSD
             _spawnManager = new SpawnManager(ref _worldEntities, ref _renderer);
 
 
-            _spawnManager.spawnRocks(200, _planet);
+            //_spawnManager.spawnRocks(200, _planet);
         }
 
         /// <summary>
@@ -453,6 +454,7 @@ namespace SSD
 
             _soundManager.update();
             _fpsManager.update(gameTime);
+            _spawnManager.update(gameTime, _planet);
 
             if (_lastBulletShot > 0)
             {

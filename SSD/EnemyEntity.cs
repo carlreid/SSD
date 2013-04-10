@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace SSD
 {
@@ -11,6 +12,24 @@ namespace SSD
             base.setFriendly(false);
             _isSpawning = true;
         }
+
+        //override public void draw(Matrix view, Matrix proj, GraphicsDevice graphicsDevice)
+        //{
+        //    foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
+        //    {
+        //        foreach (ModelMeshPart meshPart in mesh.MeshParts)
+        //        {
+        //            foreach (BasicEffect effect in mesh.Effects)
+        //            {
+        //                effect.World = getModelContainer().getBoneTransform(mesh.ParentBone.Index) * getMatrix();
+        //                effect.View = view;
+        //                effect.Projection = proj;
+        //            }
+        //            BoundingSphereRenderer.Render(getBoundingSphere(), graphicsDevice, view, proj, Color.Red);
+        //            mesh.Draw();
+        //        }
+        //    }
+        //}
 
         //override public Matrix getMatrix()
         //{

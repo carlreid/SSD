@@ -6,9 +6,9 @@ using Microsoft.Xna.Framework;
 
 namespace SSD
 {
-    class EnemyRock : EnemyEntity
+    class EnemyMine : EnemyEntity
     {
-        public EnemyRock(Vector3 position, ModelContainer model, Entity planetSphere, Random ran, float scale = 1, float yaw = 0, float pitch = 0, float roll = 0)
+        public EnemyMine(Vector3 position, ModelContainer model, Entity planetSphere, Random ran, float scale = 1, float yaw = 0, float pitch = 0, float roll = 0)
             : base(position, model, scale, yaw, pitch, roll)
         {
             _planetTarget = planetSphere;
@@ -29,36 +29,12 @@ namespace SSD
             transform *= Matrix.CreateFromQuaternion(Quaternion.CreateFromYawPitchRoll(this.getYaw(), this.getPitch(), this.getRoll()));
             transform *= Matrix.CreateTranslation(base.getPosition());
             transform *= Matrix.CreateFromQuaternion(this.getRawRotation());
-            //transform *= Matrix.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(base.getMatrix().Forward, MathHelper.ToRadians(0.1f)));
-
-            //setPosition(transform.Translation);
-            //addRotation(Quaternion.CreateFromAxisAngle(base.getMatrix().Forward, MathHelper.ToRadians(0.1f)));
 
             return transform;
         }
 
         override public void update(TimeSpan deltaTime)
         {
-            /* 
-                Vector3 direction = _chaseTarget.getMatrix().Translation - this.getMatrix().Translation;
-                direction.Normalize();
-                this.setYaw(MathHelper.ToDegrees((float)-Math.Atan2(-direction.X, direction.Z)) - 90);
-
-                //Matrix transform = Matrix.Identity;
-                //Quaternion accumulateRotation = base.getRotation();
-                //transform *= Matrix.CreateScale(base.getScale());
-                //transform *= Matrix.CreateFromQuaternion(accumulateRotation);
-                //transform *= Matrix.CreateTranslation(base.getPosition());
-                //transform *= Matrix.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(base.getMatrix().Forward, MathHelper.ToRadians(0.1f)));
-                //setPosition(transform.Translation);
-                //this.setRoll(MathHelper.ToDegrees((float)Math.Acos((double)transform.M33)));
-                //this.setPitch(MathHelper.ToDegrees((float)Math.Atan2((double)transform.M13, (double)transform.M23)));
-
-                Vector3 curForward = transform.Translation - transform.Translation * transform
-
-                this.addRotation(Quaternion.CreateFromAxisAngle(this.getMatrix().Forward, 0.01f));
-             * */
-
             float dt = deltaTime.Milliseconds / 10.0f;
 
 
