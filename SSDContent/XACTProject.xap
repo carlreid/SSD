@@ -13,11 +13,11 @@ Global Settings
 {
     Xbox File = Xbox\XACTProject.xgs;
     Windows File = Win\XACTProject.xgs;
-    Header File = XACTProject.h;
+    Header File = C:\Users\Carl\SkyDrive\Scripts and Programs\Games Software Development\SSD\SSD\SSDXACT\XACTProject.h;
     Exclude Category Names = 0;
     Exclude Variable Names = 0;
-    Last Modified Low = 0;
-    Last Modified High = 0;
+    Last Modified Low = 2064977270;
+    Last Modified High = 30286866;
 
     Category
     {
@@ -212,7 +212,54 @@ Global Settings
         Value = 0.000000;
         Initial Value = 0.000000;
         Min = 0.000000;
-        Max = 1000000.000000;
+        Max = 200.000000;
+    }
+
+    RPC
+    {
+        Name = Fade Away;
+
+        RPC Curve
+        {
+            Name = Sound::346e55b3-686c-4d33-90f9-058e0c1495af;
+            Property = 0;
+            Sound = 1;
+            Line Color = 4294901760;
+            Viewable = 1;
+
+            Variable Entry
+            {
+                Name = Distance;
+            }
+
+            RPC Point
+            {
+                X = 0.000000;
+                Y = -9600.000000;
+                Curve = 3;
+            }
+
+            RPC Point
+            {
+                X = 12.807881;
+                Y = 282.352936;
+                Curve = 2;
+            }
+
+            RPC Point
+            {
+                X = 146.798035;
+                Y = -141.176468;
+                Curve = 2;
+            }
+
+            RPC Point
+            {
+                X = 200.000000;
+                Y = -5082.353027;
+                Curve = 2;
+            }
+        }
     }
 }
 
@@ -225,8 +272,14 @@ Wave Bank
     Windows Bank Path Edited = 0;
     Seek Tables = 1;
     Compression Preset Name = <none>;
-    Bank Last Revised Low = 2777758512;
-    Bank Last Revised High = 30286858;
+    Xbox Bank Last Modified Low = 0;
+    Xbox Bank Last Modified High = 0;
+    PC Bank Last Modified Low = 2286995662;
+    PC Bank Last Modified High = 30286864;
+    Header Last Modified Low = 0;
+    Header Last Modified High = 0;
+    Bank Last Revised Low = 2286995662;
+    Bank Last Revised High = 30286864;
 
     Wave
     {
@@ -259,6 +312,10 @@ Sound Bank
     Windows File = Win\BulletSoundBank.xsb;
     Xbox Bank Path Edited = 0;
     Windows Bank Path Edited = 0;
+    Bank Last Modified Low = 3238536800;
+    Bank Last Modified High = 30286866;
+    Header Last Modified High = 0;
+    Header Last Modified Low = 0;
 
     Sound
     {
@@ -272,6 +329,11 @@ Sound Bank
             Name = Default;
         }
 
+        RPC Entry
+        {
+            RPC Name = Fade Away;
+        }
+
         Track
         {
             Volume = 0;
@@ -279,6 +341,7 @@ Sound Bank
 
             Play Wave Event
             {
+                Loop Count = 255;
                 Break Loop = 0;
                 Use Speaker Position = 0;
                 Use Center Speaker = 1;
@@ -316,6 +379,14 @@ Sound Bank
             Variation Type = 3;
             Variation Table Type = 1;
             New Variation on Loop = 0;
+        }
+
+        Sound Entry
+        {
+            Name = Missile;
+            Index = 0;
+            Weight Min = 0;
+            Weight Max = 255;
         }
     }
 }
