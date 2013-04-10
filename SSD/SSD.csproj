@@ -81,6 +81,8 @@
     <Compile Include="BoundingSphereRenderer.cs" />
     <Compile Include="Bullet.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="EnemyRock.cs" />
+    <Compile Include="FPSManager.cs" />
     <Compile Include="PlaySphere.cs" />
     <Compile Include="EnemyEntity.cs" />
     <Compile Include="ModelEntity.cs" />
@@ -98,6 +100,7 @@
     <Compile Include="Skybox.cs" />
     <Compile Include="SoundAttacher.cs" />
     <Compile Include="SoundManager.cs" />
+    <Compile Include="SpawnManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Game.ico" />

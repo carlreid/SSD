@@ -68,6 +68,7 @@ namespace SSD
                     foreach (BasicEffect effect in mesh.Effects)
                     {
                         effect.EmissiveColor = new Vector3(1, 0, 0);
+                        effect.LightingEnabled = true;
                         effect.World = getModelContainer().getBoneTransform(mesh.ParentBone.Index) * getMatrix();
                         effect.View = view;
                         effect.Projection = proj;

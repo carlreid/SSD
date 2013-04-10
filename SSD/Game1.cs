@@ -23,8 +23,11 @@ namespace SSD
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteFont _hudFont;
+        //Random _randomGen = new Random();
 
         SoundManager _soundManager;
+        FPSManager _fpsManager = new FPSManager();
+        SpawnManager _spawnManager;
         BloomComponent bloom;
 
         float aspectRatio;
@@ -164,7 +167,7 @@ namespace SSD
             _renderer.addModel("playerShip", "Models\\player_ship");
             _renderer.addModel("worldSphere", "Models\\burning_planet");
             _renderer.addModel("spaceSphere", "Models\\space_sphere");
-            _renderer.addModel("e_one", "Models\\e_one");
+            _renderer.addModel("e_one", "Models\\asteroid1");
             _renderer.addModel("nebula", "Models\\nebula_bg");
             _renderer.addModel("bullet", "Models\\bullet");
             _renderer.addModel("playSphere", "Models\\play_sphere");
@@ -182,11 +185,12 @@ namespace SSD
             _worldEntities.Add(new PlaySphere(Vector3.Zero, _renderer.getModel("playSphere"), 15f));
             _playSphere = _worldEntities[_worldEntities.Count - 1];
 
-            _worldEntities.Add(new EnemyEntity((Matrix.CreateTranslation(0, 400f, 0) * Matrix.CreateRotationZ(MathHelper.ToRadians(90))).Translation, _renderer.getModel("e_one"), 0.1f));
-
-            //Setup audio
+            //Setup managers
             _soundManager = new SoundManager(Content, _playerOne);
+            _spawnManager = new SpawnManager(ref _worldEntities, ref _renderer);
 
+
+            _spawnManager.spawnRocks(200, _planet);
         }
 
         /// <summary>
@@ -303,7 +307,7 @@ namespace SSD
                     Bullet newBullet = new Bullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("bullet"));
                     _worldEntities.Add(newBullet);
                     _soundManager.addAttatchment(LoadedSounds.ROCKET_SOUND, newBullet);
-                    _lastBulletShot = 150;
+                    _lastBulletShot = 200;
                 }
             }
 
@@ -330,7 +334,7 @@ namespace SSD
             //Check for collision, maybe move elsewhere
             for (int entity = 0; entity < _worldEntities.Count; ++entity)
             {
-                //Check entity is a ModelEntity (Only these have bounding spheres)
+                //Check entity is a ModelEntity (These mainly have bounding spheres)
                 if (_worldEntities[entity] is ModelEntity)
                 {
                     //As we know it is a ModelEntity, cast it to get access to functions.
@@ -400,6 +404,38 @@ namespace SSD
                         }
                     }
                 }
+                else if (_worldEntities[entity] is PlaySphere) //Special check for play sphere
+                {
+                    //As we know it is a PlaySphere, cast it to get access to functions.
+                    PlaySphere currentEntity = (PlaySphere)_worldEntities[entity];
+
+                    //Loop over all the entities for the special case
+                    for (int nextEntity = 0; nextEntity < _worldEntities.Count; ++nextEntity)
+                    {
+                        //Check to see if this entity is a EnemyEntity
+                        if (_worldEntities[nextEntity] is EnemyEntity)
+                        {
+                            //Cast to get functionality
+                            EnemyEntity checkEntity = (EnemyEntity)_worldEntities[nextEntity];
+
+                            //Do a check to see if either have been flagged dead as they may have collided so no point re-checking.
+                            if (currentEntity.getAlive() == false)
+                            {
+                                break; //Quit this inner for loop, no point checking the rest.
+                            }
+                            if (checkEntity.getAlive() == false)
+                            {
+                                continue; //Continue to next entity in this loop.
+                            }
+
+                            //Check for intersect
+                            if(currentEntity.getBoundingSphere().Intersects(checkEntity.getBoundingSphere())){
+                                //Set isSpawning to false so they now move around the sphere
+                                checkEntity.setIsSpawning(false);
+                            }
+                        }
+                    }
+                }
                 else
                 {
                     continue;
@@ -416,6 +452,7 @@ namespace SSD
             _planet.addPitch(0.05f);
 
             _soundManager.update();
+            _fpsManager.update(gameTime);
 
             if (_lastBulletShot > 0)
             {
@@ -485,6 +522,7 @@ namespace SSD
             //Draw 2D things - AFTER the bloom
             spriteBatch.Begin();
             spriteBatch.DrawString(_hudFont, "Player Health: " + ((ModelEntity)_playerOne).getHealth(), new Vector2(0, 0), Color.Green);
+            spriteBatch.DrawString(_hudFont, "FPS: " + _fpsManager.getFPS().ToString(), new Vector2(viewport.Width - 100, 0), Color.White);
             spriteBatch.End();
 
 

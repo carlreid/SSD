@@ -22,13 +22,15 @@ Content\Models\player_ship.xnb
 Content\missile_sound.xnb
 Content\Models\space_art_0.xnb
 Content\Models\nebula_0.xnb
-Content\Models\metalBullTexture_0.xnb
 Content\Models\planet_texture_0.xnb
 Content\space_frigate_6\space_frigate_6_color_0.xnb
 Content\Models\play_sphere.xnb
 Content\BloomCombine.xnb
 Content\BloomExtract.xnb
 Content\GaussianBlur.xnb
+Content\small_fighter_1_color_0.xnb
+Content\Models\asteroid1.xnb
+Content\Models\asteroidTexture_0.xnb
 Content\XACTProject.xgs
 Content\BulletWaveBank.xwb
 Content\BulletSoundBank.xsb

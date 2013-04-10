@@ -208,6 +208,11 @@ namespace SSD
             return _isAlive;
         }
 
+        protected Quaternion getRawRotation()
+        {
+            return _rotation;
+        }
+
         //public void updateBoundingSphere(Vector3 position, float radius){
         //    _boundingSphere.Radius = radius;
         //    _boundingSphere.Center = position;

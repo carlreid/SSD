@@ -11,6 +11,7 @@ namespace SSD
             _emitter = new AudioEmitter();
             _listner = listner;
             _emitter.Position = entityToAttachTo.getMatrix().Translation;
+            _isPlaying = true;
 
             _myCue = soundCue;
             _myCue.Apply3D(_listner, _emitter);
@@ -21,12 +22,25 @@ namespace SSD
 
         public void update()
         {
+            if (!_isPlaying)
+            {
+                return;
+            }
+
             if (_entityAttachedTo.getAlive() == false || _entityAttachedTo == null)
             {
                 _myCue.Stop(AudioStopOptions.Immediate);
+                _isPlaying = false;
+                _myCue.Dispose();
+                return;
             }
             _emitter.Position = _entityAttachedTo.getMatrix().Translation;
             _myCue.Apply3D(_listner, _emitter);
+        }
+
+        public bool isPlaying()
+        {
+            return _isPlaying;
         }
 
         Cue _myCue;
@@ -35,5 +49,6 @@ namespace SSD
         AudioEmitter _emitter;
         AudioListener _listner;
         Entity _entityAttachedTo;
+        bool _isPlaying;
     }
 }

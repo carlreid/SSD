@@ -34,14 +34,26 @@ namespace SSD
         {
             _audioEngine.Update();
 
-            _listner.Forward = _player.getMatrix().Forward;
-            _listner.Up = _player.getMatrix().Up;
-            _listner.Position = _player.getMatrix().Translation;
+            //Update the listner position to be that of the player
+            float backupYaw = _player.getYaw();
+            _player.setYaw(90);
+            Matrix playerMatrix = _player.getMatrix();
+            _listner.Forward = playerMatrix.Forward;
+            _listner.Up = playerMatrix.Up;
+            _listner.Position = playerMatrix.Translation;
+            _player.setYaw(MathHelper.ToDegrees(backupYaw));
 
+            //Remove any sounds that are marked as not being played.
+            _soundAttatchments.RemoveAll(delegate(SoundAttacher e)
+                {
+                    return !e.isPlaying();
+                }
+            );  
+
+            //Run update on all the sounds
             foreach(SoundAttacher attatchedSound in _soundAttatchments){
                 attatchedSound.update();
             }
-
         }
 
         AudioEngine _audioEngine;
