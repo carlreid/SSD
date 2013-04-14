@@ -15,12 +15,12 @@ namespace DPSF.ParticleSystems
 #if (WINDOWS)
     [Serializable]
 #endif
-    class TrailParticleSystem : DefaultTexturedQuadParticleSystem
+    class IceBulletParticleSystem : DefaultTexturedQuadParticleSystem
     {
         /// <summary>
         /// Constructor
         /// </summary>
-        public TrailParticleSystem(Game cGame) : base(cGame) { }
+        public IceBulletParticleSystem(Game cGame) : base(cGame) { }
 
         //===========================================================
         // Structures and Variables
@@ -71,7 +71,7 @@ namespace DPSF.ParticleSystems
 
         public void InitializeParticleTrail(DefaultTexturedQuadParticle cParticle)
         {
-            cParticle.Lifetime = 2.0f;
+            cParticle.Lifetime = 1.0f;
 
             cParticle.Position = Emitter.PositionData.Position;
             cParticle.StartSize = cParticle.Size = TrailStartSize;
@@ -99,15 +99,15 @@ namespace DPSF.ParticleSystems
 
             Emitter.PositionData.Position = new Vector3(0, 50, 0);
             Emitter.OrientationData.RotationalVelocity = new Vector3(0, 0, (float)Math.PI);
-            Emitter.ParticlesPerSecond = 10;
+            Emitter.ParticlesPerSecond = 5000;
 
-            TrailStartColor = Color.Red;
-            TrailEndColor = Color.Yellow;
-            TrailStartSize = 30;
-            TrailEndSize = 5;
+            TrailStartColor = Color.Blue;
+            TrailEndColor = Color.Cyan;
+            TrailStartSize = 20;
+            TrailEndSize = 4;
             SetTexture("Textures/Particle");
 
-            NumberOfParticlesToEmitScale = 0.05f;
+            NumberOfParticlesToEmitScale = 0f;
         }
 
         public void LoadSpinningTrailParticleSystem()
@@ -123,7 +123,7 @@ namespace DPSF.ParticleSystems
 
             ParticleSystemEvents.AddEveryTimeEvent(UpdateParticleSystemDynamicallyUpdateParticlesEmittedBasedOnSpeed);
 
-            Emitter.PositionData.Position = new Vector3(0, 50, 0);
+            Emitter.PositionData.Position = new Vector3(0, 0, 0);
             Emitter.OrientationData.RotationalVelocity = new Vector3(0, 0, (float)Math.PI);
             Emitter.ParticlesPerSecond = 100;
 
@@ -133,7 +133,7 @@ namespace DPSF.ParticleSystems
             TrailEndSize = 5;
             //            SetTexture("Textures/Cloud");
             SetTexture("Textures/MoveArrow");
-            NumberOfParticlesToEmitScale = 0.08f;
+            NumberOfParticlesToEmitScale = 0.25f;
         }
 
         //===========================================================

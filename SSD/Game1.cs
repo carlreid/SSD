@@ -23,7 +23,7 @@ namespace SSD
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteFont _hudFont;
-        //Random _randomGen = new Random();
+        Random _randomGen = new Random();
 
         SoundManager _soundManager;
         FPSManager _fpsManager = new FPSManager();
@@ -49,16 +49,29 @@ namespace SSD
 
         // Declare our Particle System variable
         TrailParticleSystem shipExaustParticles = null;
+        BoostParticleSystem shipBoostParticles = null;
+        BoostGlowParticleSystem shipBoostGlowParticles = null;
         SmokeParticleSystem bulletSmokeParticles = null;
+        FireBulletParticleSystem bulletFireParticles = null;
+        IceBulletParticleSystem bulletIceParticles = null;
+
+        //Input States to keep backup
+        //KeyboardState l;
+        GamePadState _controllerState;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            
+
         }
 
-        private bool removeEntity(Entity e){
+        private bool removeEntity(Entity e)
+        {
+            if (!e.getAlive())
+            {
+                _soundManager.playDeathSound(e);
+            }
             return !e.getAlive();
         }
 
@@ -145,20 +158,29 @@ namespace SSD
             shipExaustParticles = new TrailParticleSystem(this);
             shipExaustParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
 
+            shipBoostParticles = new BoostParticleSystem(this);
+            shipBoostParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+            shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
+
+            shipBoostGlowParticles = new BoostGlowParticleSystem(this);
+            shipBoostGlowParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+            shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = false;
+
             bulletSmokeParticles = new SmokeParticleSystem(this);
             bulletSmokeParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
             bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
 
+            bulletFireParticles = new FireBulletParticleSystem(this);
+            bulletFireParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+            bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
+
+            bulletIceParticles = new IceBulletParticleSystem(this);
+            bulletIceParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+            bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
+            
+            
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
-
-
-            //_missileSound = Content.Load<SoundEffect>("missile_sound");
-            //_missileSoundEffectInstance = _missileSound.CreateInstance();
-            //_missileSoundEffectInstance.Apply3D(listener, emitter);
-            //_missileSoundEffectInstance.IsLooped = true; //For testing
-            //_missileSoundEffectInstance.Play();
 
             _renderer = new Draw(graphics.GraphicsDevice, Content);
             aspectRatio = graphics.GraphicsDevice.Viewport.AspectRatio;
@@ -170,7 +192,8 @@ namespace SSD
             _renderer.addModel("e_rock", "Models\\asteroid1");
             _renderer.addModel("e_mine", "Models\\mine");
             _renderer.addModel("nebula", "Models\\nebula_bg");
-            _renderer.addModel("bullet", "Models\\bullet");
+            _renderer.addModel("iceBullet", "Models\\iceBullet");
+            _renderer.addModel("fireBullet", "Models\\fireBullet");
             _renderer.addModel("playSphere", "Models\\play_sphere");
 
             //Create entities
@@ -190,7 +213,7 @@ namespace SSD
             _soundManager = new SoundManager(Content, _playerOne);
             _spawnManager = new SpawnManager(ref _worldEntities, ref _renderer);
 
-
+            _controllerState = GamePad.GetState(PlayerIndex.One);
             //_spawnManager.spawnRocks(200, _planet);
         }
 
@@ -203,7 +226,11 @@ namespace SSD
             // TODO: Unload any non ContentManager content here
 
             shipExaustParticles.Destroy();
+            shipBoostParticles.Destroy();
+            shipBoostGlowParticles.Destroy();
             bulletSmokeParticles.Destroy();
+            bulletFireParticles.Destroy();
+            bulletIceParticles.Destroy();
         }
 
         /// <summary>
@@ -213,13 +240,29 @@ namespace SSD
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+
+            GamePadState curGamepadState = GamePad.GetState(PlayerIndex.One);
+
             #region Controls
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            if (GamePad.GetState(PlayerIndex.One).Buttons.LeftShoulder == ButtonState.Pressed)
+            if (curGamepadState.Buttons.LeftShoulder == ButtonState.Pressed && _controllerState.Buttons.LeftShoulder != ButtonState.Pressed)
             {
                 _playerOne.useBoost();
+            }
+
+            if (curGamepadState.Buttons.RightShoulder == ButtonState.Pressed && _controllerState.Buttons.RightShoulder != ButtonState.Pressed)
+            {
+                _playerOne.switchElement();
+                if (_playerOne.isIceElement())
+                {
+                    _soundManager.addAttatchment(LoadedSounds.ICE_ACTIVATED, _playerOne);
+                }
+                else
+                {
+                    _soundManager.addAttatchment(LoadedSounds.FIRE_ACTIVATED, _playerOne);
+                }
             }
 
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y != 0)
@@ -255,7 +298,7 @@ namespace SSD
                     playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.0075f));
                     playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.0075f));
                     _playerOne.setYaw(45);
-                } 
+                }
                 else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A))
                 {
                     playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.0075f));
@@ -267,7 +310,7 @@ namespace SSD
                     playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.0075f));
                     playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.0075f));
                     _playerOne.setYaw(-45);
-                } 
+                }
                 else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W))
                 {
                     playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.01f));
@@ -305,9 +348,19 @@ namespace SSD
 
                     float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
 
-                    Bullet newBullet = new Bullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("bullet"));
-                    _worldEntities.Add(newBullet);
-                    _soundManager.addAttatchment(LoadedSounds.ROCKET_SOUND, newBullet);
+                    if(_playerOne.isIceElement()){
+                        for (int iceOffset = 0; iceOffset < 4; ++iceOffset)
+                        {
+                            Bullet newBullet = new IceBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw - 15 + (iceOffset * 10), _renderer.getModel("iceBullet"), _randomGen.Next(1500, 3000), (float)_randomGen.NextDouble() + 0.5f);
+                            newBullet.setSpeed((float)_randomGen.NextDouble() * 0.5f + 0.5f);
+                            _worldEntities.Add(newBullet);
+                            _soundManager.addAttatchment(LoadedSounds.ICE_BULLET_FIRED, newBullet);
+                        }
+                    } else {
+                        Bullet newBullet = new FireBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("fireBullet"));
+                        _worldEntities.Add(newBullet);
+                        _soundManager.addAttatchment(LoadedSounds.FIRE_BULLET_FIRED, newBullet);
+                    }
                     _lastBulletShot = 200;
                 }
             }
@@ -323,12 +376,21 @@ namespace SSD
 
             #endregion
 
-            foreach (Entity entity in _worldEntities){
+            foreach (Entity entity in _worldEntities)
+            {
                 entity.update(gameTime.ElapsedGameTime);
                 if (entity is Bullet)
                 {
-                    bulletSmokeParticles.Emitter.PositionData.Position = entity.getMatrix().Translation;
-                    bulletSmokeParticles.AddParticle();
+                    if (entity is IceBullet)
+                    {
+                        bulletIceParticles.Emitter.PositionData.Position = entity.getMatrix().Translation;
+                        bulletIceParticles.AddParticle();
+                    }
+                    else
+                    {
+                        bulletFireParticles.Emitter.PositionData.Position = entity.getMatrix().Translation;
+                        bulletFireParticles.AddParticle();
+                    }
                 }
             }
 
@@ -372,10 +434,32 @@ namespace SSD
                                     if ((currentEntity is PlayerEntity && checkEntity is EnemyEntity) ||
                                         (checkEntity is PlayerEntity && currentEntity is EnemyEntity))
                                     {
-                                        currentEntity.doDamage(currentEntity.getHealth());
-                                        currentEntity.setAlive(false);
-                                        checkEntity.doDamage(checkEntity.getHealth());
-                                        checkEntity.setAlive(false);
+                                        //If the player is boosting, they shouldn't die. So only kill enemy
+                                        if (currentEntity is PlayerEntity)
+                                        {
+                                            if (((PlayerEntity)currentEntity).isBoosting())
+                                            {
+                                                checkEntity.setAlive(false);
+                                                checkEntity.doDamage(currentEntity.getHealth());
+                                            }
+                                        }
+                                        else if (checkEntity is PlayerEntity)
+                                        {
+                                            if (((PlayerEntity)checkEntity).isBoosting())
+                                            {
+                                                currentEntity.setAlive(false);
+                                                currentEntity.doDamage(checkEntity.getHealth());
+                                            }
+                                        }
+                                        else
+                                        {
+                                            //Player isn't boosting do mass destruction
+                                            currentEntity.doDamage(currentEntity.getHealth());
+                                            currentEntity.setAlive(false);
+                                            checkEntity.doDamage(checkEntity.getHealth());
+                                            checkEntity.setAlive(false);
+                                        }
+
                                         continue; //Do not check if bullets, this will be game over/remove life.
                                     }
 
@@ -430,7 +514,8 @@ namespace SSD
                             }
 
                             //Check for intersect
-                            if(currentEntity.getBoundingSphere().Intersects(checkEntity.getBoundingSphere())){
+                            if (currentEntity.getBoundingSphere().Intersects(checkEntity.getBoundingSphere()))
+                            {
                                 //Set isSpawning to false so they now move around the sphere
                                 checkEntity.setIsSpawning(false);
                             }
@@ -445,7 +530,30 @@ namespace SSD
 
             _worldEntities.RemoveAll(removeEntity);
 
-            shipExaustParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Backward * 10; ;
+
+            //If player is bossting, modify the trail to emite a blue boost
+            if (_playerOne.isBoosting())
+            {
+                if (_playerOne.isIceElement())
+                {
+                    shipExaustParticles.TrailStartColor = Color.Blue;
+                }
+                else
+                {
+                    shipExaustParticles.TrailStartColor = Color.Orange;
+                }
+            }
+            else
+            {
+                shipExaustParticles.TrailStartColor = Color.Red;
+            }
+
+            //Change emitter positions
+            shipExaustParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Backward * 10;
+            shipBoostParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Forward * 20;
+            shipBoostParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
+            shipBoostGlowParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation +  _playerOne.getMatrix().Up * 10 + _playerOne.getMatrix().Forward * 10;
+            shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
 
             _universe.addRoll(-0.001f);
             _universe.addYaw(-0.005f);
@@ -460,6 +568,10 @@ namespace SSD
             {
                 _lastBulletShot -= gameTime.ElapsedGameTime.Milliseconds;
             }
+
+
+            _controllerState = curGamepadState;
+
 
             base.Update(gameTime);
         }
@@ -481,7 +593,7 @@ namespace SSD
 
             bloom.BeginDraw();
 
-            GraphicsDevice.Clear( ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             //graphics.GraphicsDevice.DepthStencilState.DepthBufferEnable = true;
             //graphics.GraphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
@@ -500,25 +612,45 @@ namespace SSD
             //Render all models that are loaded in.
 
 
-            foreach(Entity entity in _worldEntities)
+            foreach (Entity entity in _worldEntities)
             {
                 _renderer.renderEntity(view, proj, entity);
             }
 
             // Set the Particle System's World, View, and Projection matrices so that it knows how to draw the particles properly.
             shipExaustParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
+            shipBoostParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
+            shipBoostGlowParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
             bulletSmokeParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
+            bulletFireParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
+            bulletIceParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
 
             // Update the Particle System
             shipExaustParticles.SetCameraPosition(cameraPosition);
             shipExaustParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
+            shipBoostParticles.SetCameraPosition(cameraPosition);
+            shipBoostParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
+            shipBoostGlowParticles.SetCameraPosition(cameraPosition);
+            shipBoostGlowParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
             bulletSmokeParticles.SetCameraPosition(cameraPosition);
             bulletSmokeParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
 
+            bulletFireParticles.SetCameraPosition(cameraPosition);
+            bulletFireParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
+            bulletIceParticles.SetCameraPosition(cameraPosition);
+            bulletIceParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
             shipExaustParticles.Draw();
+            shipBoostParticles.Draw();
+            shipBoostGlowParticles.Draw();
             bulletSmokeParticles.Draw();
-            
+            bulletFireParticles.Draw();
+            bulletIceParticles.Draw();
+
             base.Draw(gameTime);
 
             //Draw 2D things - AFTER the bloom
@@ -528,7 +660,7 @@ namespace SSD
             spriteBatch.End();
 
 
-            
+
         }
     }
 }

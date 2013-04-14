@@ -19,6 +19,8 @@ namespace SSD
             _angleModifier = 1.5f;
             _timeTillDeath = 1000;
             _damage = 100;
+            _speed = 1.0f;
+            _scale = 1.0f;
         }
 
         override public Matrix getMatrix()
@@ -27,7 +29,7 @@ namespace SSD
 
             Quaternion accumulateRotation = base.getRotation();
 
-            transform *= Matrix.CreateScale(base.getScale());
+            transform *= Matrix.CreateScale(base.getScale() * _scale);
             transform *= Matrix.CreateFromQuaternion(accumulateRotation);
             transform *= Matrix.CreateTranslation(base.getPosition());
             transform *= Matrix.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(base.getMatrix().Forward, MathHelper.ToRadians(_curAngle)));
@@ -38,7 +40,7 @@ namespace SSD
         override public void update(TimeSpan deltaTime)
         {
 
-            _curAngle += _angleModifier;
+            _curAngle += _angleModifier * _speed;
 
             if (_angleModifier > 0.5f)
             {
@@ -59,25 +61,25 @@ namespace SSD
             base.update(deltaTime);
         }
 
-        public override void draw(Matrix view, Matrix proj, GraphicsDevice graphicsDevice)
-        {
-            foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
-            {
-                foreach (ModelMeshPart meshPart in mesh.MeshParts)
-                {
-                    foreach (BasicEffect effect in mesh.Effects)
-                    {
-                        effect.EmissiveColor = new Vector3(1, 0, 0);
-                        effect.LightingEnabled = true;
-                        effect.World = getModelContainer().getBoneTransform(mesh.ParentBone.Index) * getMatrix();
-                        effect.View = view;
-                        effect.Projection = proj;
-                    }
-                    //BoundingSphereRenderer.Render(entity.getBoundingSphere(), _graphicsDevice, view, proj, Color.Red);
-                    mesh.Draw();
-                }
-            }
-        }
+        //public override void draw(Matrix view, Matrix proj, GraphicsDevice graphicsDevice)
+        //{
+        //    foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
+        //    {
+        //        foreach (ModelMeshPart meshPart in mesh.MeshParts)
+        //        {
+        //            foreach (BasicEffect effect in mesh.Effects)
+        //            {
+        //                effect.EmissiveColor = new Vector3(1, 0, 0);
+        //                //effect.LightingEnabled = true;
+        //                effect.World = getModelContainer().getBoneTransform(mesh.ParentBone.Index) * getMatrix();
+        //                effect.View = view;
+        //                effect.Projection = proj;
+        //            }
+        //            //BoundingSphereRenderer.Render(entity.getBoundingSphere(), _graphicsDevice, view, proj, Color.Red);
+        //            mesh.Draw();
+        //        }
+        //    }
+        //}
 
         public int getDamage()
         {
@@ -89,19 +91,25 @@ namespace SSD
             _damage = amountOfDamage;
         }
 
-        //public bool getAlive()
-        //{
-        //    return _isAlive;
-        //}
+        public void setSpeed(float speed){
+            _speed = speed;
+        }
 
-        //float _velocity;
-        //Vector3 _direction;
-        //float _directionYaw;
+        protected void setLifespan(float lifespan)
+        {
+            _timeTillDeath = lifespan;
+        }
+
+        protected void setScale(float scale)
+        {
+            _scale = scale;
+        }
+
         float _timeTillDeath;
-
         float _curAngle;
         float _angleModifier;
-        //Vector3 _position;
+        float _speed;
+        float _scale;
         int _damage;
     }
 }

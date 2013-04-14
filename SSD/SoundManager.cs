@@ -5,16 +5,16 @@ using Microsoft.Xna.Framework;
 
 namespace SSD
 {
-    public enum LoadedSounds { ROCKET_SOUND, PLASMA_SOUND, NORMAL_SOUND };
+    public enum LoadedSounds { FIRE_ACTIVATED, ICE_ACTIVATED, ICE_BULLET_FIRED, FIRE_BULLET_FIRED, ICE_BULLET_DESTROY, FIRE_BULLET_DESTROY };
     class SoundManager
     {
         public SoundManager(ContentManager contentManager, PlayerEntity player)
         {
             _contentManager = contentManager;
             _soundAttatchments = new List<SoundAttacher>();
-            _soundEffects = new List<SoundEffect>();
+            //_soundEffects = new List<SoundEffect>();
 
-            _soundEffects.Add(_contentManager.Load<SoundEffect>("missile_sound"));
+            //_soundEffects.Add(_contentManager.Load<SoundEffect>("missile_sound"));
 
             _listner = new AudioListener();
             _player = player;
@@ -23,11 +23,36 @@ namespace SSD
             _audioEngine = new AudioEngine("Content/XACTProject.xgs");
             _bulletWaveBank = new WaveBank(_audioEngine, "Content/BulletWaveBank.xwb");
             _bulletSoundBank = new SoundBank(_audioEngine, "Content/BulletSoundBank.xsb");
+            _announcerWaveBank = new WaveBank(_audioEngine, "Content/AnnouncerWaveBank.xwb");
+            _announcerSoundBank = new SoundBank(_audioEngine, "Content/AnnouncerSoundBank.xsb");
         }
 
         public void addAttatchment(LoadedSounds soundEnum, Entity entityToAttachTo)
         {
-            _soundAttatchments.Add(new SoundAttacher(_bulletSoundBank.GetCue("Missile"), _listner, entityToAttachTo));
+            if (soundEnum == LoadedSounds.FIRE_ACTIVATED)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_announcerSoundBank.GetCue("FireActivated")));
+            }
+            else if (soundEnum == LoadedSounds.ICE_ACTIVATED)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_announcerSoundBank.GetCue("IceActivated")));
+            }
+            else if (soundEnum == LoadedSounds.ICE_BULLET_FIRED)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_bulletSoundBank.GetCue("IceBulletFired"), _listner, entityToAttachTo));
+            }
+            else if (soundEnum == LoadedSounds.FIRE_BULLET_FIRED)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_bulletSoundBank.GetCue("FireBulletFired"), _listner, entityToAttachTo));
+            }
+            else if (soundEnum == LoadedSounds.FIRE_BULLET_DESTROY)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_bulletSoundBank.GetCue("FireBulletDestroy"), _listner, entityToAttachTo));
+            }
+            else if (soundEnum == LoadedSounds.ICE_BULLET_DESTROY)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_bulletSoundBank.GetCue("IceBulletDestroy"), _listner, entityToAttachTo));
+            }
         }
 
         public void update()
@@ -56,13 +81,28 @@ namespace SSD
             }
         }
 
+        public void playDeathSound(Entity entity)
+        {
+            if (entity is IceBullet)
+            {
+                addAttatchment(LoadedSounds.ICE_BULLET_DESTROY, entity);
+            }
+            else if (entity is FireBullet)
+            {
+                addAttatchment(LoadedSounds.FIRE_BULLET_DESTROY, entity);
+            }
+
+        }
+
         AudioEngine _audioEngine;
         WaveBank _bulletWaveBank;
         SoundBank _bulletSoundBank;
+        WaveBank _announcerWaveBank;
+        SoundBank _announcerSoundBank;
 
         ContentManager _contentManager;
         List<SoundAttacher> _soundAttatchments;
-        List<SoundEffect> _soundEffects;
+        //List<SoundEffect> _soundEffects;
         AudioListener _listner;
         PlayerEntity _player;
     }

@@ -96,7 +96,13 @@
     <Compile Include="Camera.cs" />
     <Compile Include="EnemyMine.cs" />
     <Compile Include="EnemyRock.cs" />
+    <Compile Include="FireBullet.cs" />
     <Compile Include="FPSManager.cs" />
+    <Compile Include="IceBullet.cs" />
+    <Compile Include="Particle Systems\BoostPS.cs" />
+    <Compile Include="Particle Systems\BoostGlowPS.cs" />
+    <Compile Include="Particle Systems\IceBulletPS.cs" />
+    <Compile Include="Particle Systems\FireBulletPS.cs" />
     <Compile Include="PlaySphere.cs" />
     <Compile Include="EnemyEntity.cs" />
     <Compile Include="ModelEntity.cs" />

@@ -18,6 +18,7 @@ namespace SSD
             RasterizerState originalState = graphicsDevice.RasterizerState;
             RasterizerState wireFrame = new RasterizerState();
             wireFrame.FillMode = FillMode.WireFrame;
+            
 
             //DepthStencilState originalDepth = graphicsDevice.DepthStencilState;
             //DepthStencilState noDepth = new DepthStencilState();

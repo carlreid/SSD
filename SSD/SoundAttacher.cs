@@ -20,6 +20,18 @@ namespace SSD
             _myCue.Play();
         }
 
+        public SoundAttacher(Cue soundCue, bool isLoop = false)
+        {
+            _emitter = new AudioEmitter();
+            _listner = null;
+            _isPlaying = true;
+
+            _myCue = soundCue;
+
+            _entityAttachedTo = null;
+            _myCue.Play();
+        }
+
         public void update()
         {
             if (!_isPlaying)
@@ -27,13 +39,18 @@ namespace SSD
                 return;
             }
 
-            if (_entityAttachedTo.getAlive() == false || _entityAttachedTo == null)
+            if (_entityAttachedTo == null)
             {
-                _myCue.Stop(AudioStopOptions.Immediate);
-                _isPlaying = false;
-                _myCue.Dispose();
                 return;
             }
+
+            //if (_entityAttachedTo.getAlive() == false || _entityAttachedTo == null)
+            //{
+            //    _myCue.Stop(AudioStopOptions.Immediate);
+            //    _isPlaying = false;
+            //    _myCue.Dispose();
+            //    return;
+            //}
             _emitter.Position = _entityAttachedTo.getMatrix().Translation;
             _myCue.Apply3D(_listner, _emitter);
         }
