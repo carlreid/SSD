@@ -59,6 +59,7 @@ namespace SSD
         ExplosionRockParticleSystem _rockExplodeParticles = null;
         ExplosionMineParticleSystem _mineExplodeParticles = null;
         ShipExplodeParticleSystem _shipExplodeParticles = null;
+        ShipBombExplodeParticleSystem _shipBombExplodeParticles = null;
 
         //Input States to keep backup
         //KeyboardState l;
@@ -212,6 +213,7 @@ namespace SSD
             _rockExplodeParticles = new ExplosionRockParticleSystem(this);
             _mineExplodeParticles = new ExplosionMineParticleSystem(this);
             _shipExplodeParticles = new ShipExplodeParticleSystem(this);
+            _shipBombExplodeParticles = new ShipBombExplodeParticleSystem(this);
 
             _particleSystemManager.AddParticleSystem(_shipExaustParticles);
             _particleSystemManager.AddParticleSystem(_shipBoostParticles);
@@ -222,6 +224,7 @@ namespace SSD
             _particleSystemManager.AddParticleSystem(_rockExplodeParticles);
             _particleSystemManager.AddParticleSystem(_mineExplodeParticles);
             _particleSystemManager.AddParticleSystem(_shipExplodeParticles);
+            _particleSystemManager.AddParticleSystem(_shipBombExplodeParticles);
             _particleSystemManager.AutoInitializeAllParticleSystems(this.GraphicsDevice, this.Content, null);
 
             _shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
@@ -230,6 +233,7 @@ namespace SSD
             _bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
             _bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
             _shipExplodeParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipBombExplodeParticles.Emitter.EmitParticlesAutomatically = false;
 
             _rockExplodeParticles.ChangeExplosionColor(Color.Cyan);
             //_mineExplodeParticles.ChangeExplosionColor(Color.Red);
@@ -287,6 +291,7 @@ namespace SSD
             _bulletFireParticles.Destroy();
             _bulletIceParticles.Destroy();
             _shipExplodeParticles.Destroy();
+            _shipBombExplodeParticles.Destroy();
         }
 
         /// <summary>
@@ -303,10 +308,28 @@ namespace SSD
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
                 this.Exit();
 
-            if (curGamepadState.Buttons.LeftShoulder == ButtonState.Pressed && _controllerState.Buttons.LeftShoulder != ButtonState.Pressed)
+            if (curGamepadState.Triggers.Left > 0)
             {
                 _playerOne.useBoost(_soundManager);
-                
+            }
+
+            if (curGamepadState.Buttons.LeftShoulder == ButtonState.Pressed && _controllerState.Buttons.LeftShoulder != ButtonState.Pressed)
+            {
+                if(_playerOne.useBomb(_soundManager)){
+                    _shipBombExplodeParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation;
+                    _shipBombExplodeParticles.Explode();
+                    _worldEntities.ForEach(delegate(Entity entity)
+                    {
+                        if (entity is EnemyEntity)
+                        {
+                            Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
+                            if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
+                            {
+                                entity.setAlive(false);
+                            }
+                        }
+                    });
+                }
             }
 
             if (curGamepadState.Buttons.RightShoulder == ButtonState.Pressed && _controllerState.Buttons.RightShoulder != ButtonState.Pressed)

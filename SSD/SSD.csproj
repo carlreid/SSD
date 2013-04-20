@@ -115,6 +115,7 @@
     <Compile Include="Entity\Entity.cs" />
     <Compile Include="Entity\ModelContainer.cs" />
     <Compile Include="Particle Systems\QuadSprayPS.cs" />
+    <Compile Include="Particle Systems\ShipBombPS.cs" />
     <Compile Include="Particle Systems\ShipExplodePS.cs" />
     <Compile Include="Particle Systems\SmokePS.cs" />
     <Compile Include="Particle Systems\TrailPS.cs" />

@@ -10,7 +10,7 @@ namespace SSD
             : base(position, model, scale, yaw, pitch, roll)
         {
             _lives = 3;
-            _bombs = 3;
+            _bombs = 30;
             _boosts = 0;
             _lastBoostApplied = 0; //20 Seconds
             _boostReplenishTime = 20000;
@@ -110,6 +110,17 @@ namespace SSD
                 _lastBoostApplied = _boostReplenishTime;
                 soundManager.addAttatchment(LoadedSounds.SHIP_BOOST, this);
             }
+        }
+
+        public bool useBomb(SoundManager soundManager)
+        {
+            if (_bombs > 0)
+            {
+                --_bombs;
+                soundManager.addAttatchment(LoadedSounds.SHIP_BOMB, this);
+                return true;
+            }
+            return false;
         }
 
         public bool isBoosting()

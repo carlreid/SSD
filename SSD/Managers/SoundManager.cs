@@ -8,7 +8,7 @@ namespace SSD
 {
     public enum LoadedSounds { FIRE_ACTIVATED, ICE_ACTIVATED, ICE_BULLET_FIRED, FIRE_BULLET_FIRED, ICE_BULLET_DESTROY, FIRE_BULLET_DESTROY,
                                ROCK_ENEMY_MOVE, MINE_ENEMY_MOVE, ROCK_ENEMY_DESTROY, MINE_ENEMY_DESTROY,
-                               SHIP_BOOST, SHIP_ENGINE_DRONE, SHIP_DEATH};
+                               SHIP_BOOST, SHIP_ENGINE_DRONE, SHIP_DEATH, SHIP_BOMB};
     class SoundManager
     {
         public SoundManager(ContentManager contentManager, PlayerEntity player)
@@ -85,6 +85,10 @@ namespace SSD
             else if (soundEnum == LoadedSounds.SHIP_DEATH)
             {
                 _soundAttatchments.Add(new SoundAttacher(_entitySoundBank.GetCue("ShipDeath")));
+            }
+            else if (soundEnum == LoadedSounds.SHIP_BOMB)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_entitySoundBank.GetCue("ShipBomb")));
             }
 
             
