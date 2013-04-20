@@ -61,7 +61,7 @@ namespace DPSF.ParticleSystems
         //===========================================================
         public override void AutoInitialize(GraphicsDevice cGraphicsDevice, ContentManager cContentManager, SpriteBatch cSpriteBatch)
         {
-            InitializeTexturedQuadParticleSystem(cGraphicsDevice, cContentManager, 1000, 50000,
+            InitializeTexturedQuadParticleSystem(cGraphicsDevice, cContentManager, 1000, 5000,
                                                     UpdateVertexProperties, "Textures/Particle");
 
             LoadParticleSystem();
@@ -97,9 +97,9 @@ namespace DPSF.ParticleSystems
 
             ParticleSystemEvents.AddEveryTimeEvent(UpdateParticleSystemDynamicallyUpdateParticlesEmittedBasedOnSpeed);
 
-            Emitter.PositionData.Position = new Vector3(0, 50, 0);
+            Emitter.PositionData.Position = new Vector3(0, 0, 0);
             Emitter.OrientationData.RotationalVelocity = new Vector3(0, 0, (float)Math.PI);
-            Emitter.ParticlesPerSecond = 5000;
+            Emitter.ParticlesPerSecond = 100;
 
             TrailStartColor = Color.Blue;
             TrailEndColor = Color.Cyan;
@@ -107,34 +107,34 @@ namespace DPSF.ParticleSystems
             TrailEndSize = 4;
             SetTexture("Textures/Particle");
 
-            NumberOfParticlesToEmitScale = 0f;
+            NumberOfParticlesToEmitScale = 1f;
         }
 
-        public void LoadSpinningTrailParticleSystem()
-        {
-            ParticleInitializationFunction = InitializeParticleTrail;
+        //public void LoadSpinningTrailParticleSystem()
+        //{
+        //    ParticleInitializationFunction = InitializeParticleTrail;
 
-            ParticleEvents.RemoveAllEvents();
-            ParticleEvents.AddEveryTimeEvent(UpdateParticleTransparencyToFadeOutUsingLerp);
-            ParticleEvents.AddEveryTimeEvent(UpdateParticleColorUsingLerp);
-            ParticleEvents.AddEveryTimeEvent(UpdateParticleWidthAndHeightUsingLerp);
-            ParticleEvents.AddEveryTimeEvent(UpdateParticleRotationUsingRotationalVelocity);
-            ParticleEvents.AddEveryTimeEvent(UpdateParticleToFaceTheCamera, 100);
+        //    ParticleEvents.RemoveAllEvents();
+        //    ParticleEvents.AddEveryTimeEvent(UpdateParticleTransparencyToFadeOutUsingLerp);
+        //    ParticleEvents.AddEveryTimeEvent(UpdateParticleColorUsingLerp);
+        //    ParticleEvents.AddEveryTimeEvent(UpdateParticleWidthAndHeightUsingLerp);
+        //    ParticleEvents.AddEveryTimeEvent(UpdateParticleRotationUsingRotationalVelocity);
+        //    ParticleEvents.AddEveryTimeEvent(UpdateParticleToFaceTheCamera, 100);
 
-            ParticleSystemEvents.AddEveryTimeEvent(UpdateParticleSystemDynamicallyUpdateParticlesEmittedBasedOnSpeed);
+        //    ParticleSystemEvents.AddEveryTimeEvent(UpdateParticleSystemDynamicallyUpdateParticlesEmittedBasedOnSpeed);
 
-            Emitter.PositionData.Position = new Vector3(0, 0, 0);
-            Emitter.OrientationData.RotationalVelocity = new Vector3(0, 0, (float)Math.PI);
-            Emitter.ParticlesPerSecond = 100;
+        //    Emitter.PositionData.Position = new Vector3(0, 0, 0);
+        //    Emitter.OrientationData.RotationalVelocity = new Vector3(0, 0, (float)Math.PI);
+        //    Emitter.ParticlesPerSecond = 100;
 
-            TrailStartColor = Color.Blue;
-            TrailEndColor = Color.Cyan;
-            TrailStartSize = 30;
-            TrailEndSize = 5;
-            //            SetTexture("Textures/Cloud");
-            SetTexture("Textures/MoveArrow");
-            NumberOfParticlesToEmitScale = 0.25f;
-        }
+        //    TrailStartColor = Color.Blue;
+        //    TrailEndColor = Color.Cyan;
+        //    TrailStartSize = 30;
+        //    TrailEndSize = 5;
+        //    //            SetTexture("Textures/Cloud");
+        //    SetTexture("Textures/MoveArrow");
+        //    NumberOfParticlesToEmitScale = 0.25f;
+        //}
 
         //===========================================================
         // Particle Update Functions

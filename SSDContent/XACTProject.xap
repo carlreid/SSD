@@ -221,7 +221,7 @@ Global Settings
 
         RPC Curve
         {
-            Name = Sound::3373f243-8584-411c-a54c-fe77387dbe12;
+            Name = Sound::9875e295-f036-44e8-828a-c2dc2a48e057;
             Property = 0;
             Sound = 1;
             Line Color = 4294901760;
@@ -503,14 +503,8 @@ Wave Bank
     Windows Bank Path Edited = 0;
     Seek Tables = 1;
     Compression Preset Name = <none>;
-    Xbox Bank Last Modified Low = 0;
-    Xbox Bank Last Modified High = 0;
-    PC Bank Last Modified Low = 0;
-    PC Bank Last Modified High = 0;
-    Header Last Modified Low = 0;
-    Header Last Modified High = 0;
-    Bank Last Revised Low = 2451518723;
-    Bank Last Revised High = 30292282;
+    Bank Last Revised Low = 494410741;
+    Bank Last Revised High = 30292681;
 
     Wave
     {
@@ -555,6 +549,75 @@ Wave Bank
             File Type = 1;
             Last Modified Low = 3850402373;
             Last Modified High = 30292278;
+        }
+    }
+
+    Wave
+    {
+        Name = mine_explode;
+        File = Sounds\mine_explode.wav;
+        Build Settings Last Modified Low = 2705497119;
+        Build Settings Last Modified High = 30292478;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 2;
+            Sampling Rate = 44100;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 276480;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 1581533952;
+            Last Modified High = 30292213;
+        }
+    }
+
+    Wave
+    {
+        Name = rock_explode;
+        File = Sounds\rock_explode.wav;
+        Build Settings Last Modified Low = 2705507119;
+        Build Settings Last Modified High = 30292478;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 2;
+            Sampling Rate = 44100;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 358400;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 3481533952;
+            Last Modified High = 30292213;
+        }
+    }
+
+    Wave
+    {
+        Name = ship_boost;
+        File = Sounds\ship_boost.wav;
+        Build Settings Last Modified Low = 438273608;
+        Build Settings Last Modified High = 30292681;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 2;
+            Sampling Rate = 44100;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 469376;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 223666332;
+            Last Modified High = 30292681;
         }
     }
 }
@@ -624,7 +687,7 @@ Sound Bank
     Sound
     {
         Name = IceBulletFired;
-        Volume = -1200;
+        Volume = -2400;
         Pitch = 0;
         Priority = 0;
 
@@ -676,7 +739,7 @@ Sound Bank
     Sound
     {
         Name = FireBulletDestroy;
-        Volume = -1200;
+        Volume = -1800;
         Pitch = 0;
         Priority = 0;
 
@@ -728,7 +791,7 @@ Sound Bank
     Sound
     {
         Name = IceBulletDestroy;
-        Volume = -1200;
+        Volume = -3500;
         Pitch = 0;
         Priority = 0;
 
@@ -918,7 +981,7 @@ Sound Bank
     Sound
     {
         Name = FireActivated;
-        Volume = -1200;
+        Volume = -300;
         Pitch = 0;
         Priority = 0;
 
@@ -965,7 +1028,7 @@ Sound Bank
     Sound
     {
         Name = IceActivated;
-        Volume = -1200;
+        Volume = -300;
         Pitch = 0;
         Priority = 0;
 
@@ -1211,8 +1274,6 @@ Sound Bank
     Windows File = Win\EntitySoundBank.xsb;
     Xbox Bank Path Edited = 0;
     Windows Bank Path Edited = 0;
-    Header Last Modified High = 0;
-    Header Last Modified Low = 0;
 
     Sound
     {
@@ -1320,6 +1381,147 @@ Sound Bank
         }
     }
 
+    Sound
+    {
+        Name = MineExplode;
+        Volume = -600;
+        Pitch = 0;
+        Priority = 0;
+
+        Category Entry
+        {
+            Name = Default;
+        }
+
+        Track
+        {
+            Volume = 0;
+            Use Filter = 0;
+
+            Play Wave Event
+            {
+                Break Loop = 0;
+                Use Speaker Position = 0;
+                Use Center Speaker = 1;
+                New Speaker Position On Loop = 1;
+                Speaker Position Angle = 0.000000;
+                Speaker Position Arc = 0.000000;
+
+                Event Header
+                {
+                    Timestamp = 0;
+                    Relative = 0;
+                    Random Recurrence = 0;
+                    Random Offset = 0;
+                }
+
+                Wave Entry
+                {
+                    Bank Name = EntityWaveBank;
+                    Bank Index = 2;
+                    Entry Name = mine_explode;
+                    Entry Index = 2;
+                    Weight = 255;
+                    Weight Min = 0;
+                }
+            }
+        }
+    }
+
+    Sound
+    {
+        Name = RockExplode;
+        Volume = -600;
+        Pitch = 0;
+        Priority = 0;
+
+        Category Entry
+        {
+            Name = Default;
+        }
+
+        Track
+        {
+            Volume = 0;
+            Use Filter = 0;
+
+            Play Wave Event
+            {
+                Break Loop = 0;
+                Use Speaker Position = 0;
+                Use Center Speaker = 1;
+                New Speaker Position On Loop = 1;
+                Speaker Position Angle = 0.000000;
+                Speaker Position Arc = 0.000000;
+
+                Event Header
+                {
+                    Timestamp = 0;
+                    Relative = 0;
+                    Random Recurrence = 0;
+                    Random Offset = 0;
+                }
+
+                Wave Entry
+                {
+                    Bank Name = EntityWaveBank;
+                    Bank Index = 2;
+                    Entry Name = rock_explode;
+                    Entry Index = 3;
+                    Weight = 255;
+                    Weight Min = 0;
+                }
+            }
+        }
+    }
+
+    Sound
+    {
+        Name = ShipBoost;
+        Volume = -1200;
+        Pitch = 0;
+        Priority = 0;
+
+        Category Entry
+        {
+            Name = Default;
+        }
+
+        Track
+        {
+            Volume = 0;
+            Use Filter = 0;
+
+            Play Wave Event
+            {
+                Break Loop = 0;
+                Use Speaker Position = 0;
+                Use Center Speaker = 1;
+                New Speaker Position On Loop = 1;
+                Speaker Position Angle = 0.000000;
+                Speaker Position Arc = 0.000000;
+
+                Event Header
+                {
+                    Timestamp = 0;
+                    Relative = 0;
+                    Random Recurrence = 0;
+                    Random Offset = 0;
+                }
+
+                Wave Entry
+                {
+                    Bank Name = EntityWaveBank;
+                    Bank Index = 2;
+                    Entry Name = ship_boost;
+                    Entry Index = 4;
+                    Weight = 255;
+                    Weight Min = 0;
+                }
+            }
+        }
+    }
+
     Cue
     {
         Name = RockMoving;
@@ -1355,6 +1557,66 @@ Sound Bank
         {
             Name = MineMoving;
             Index = 0;
+            Weight Min = 0;
+            Weight Max = 255;
+        }
+    }
+
+    Cue
+    {
+        Name = RockExplode;
+
+        Variation
+        {
+            Variation Type = 3;
+            Variation Table Type = 1;
+            New Variation on Loop = 0;
+        }
+
+        Sound Entry
+        {
+            Name = RockExplode;
+            Index = 3;
+            Weight Min = 0;
+            Weight Max = 255;
+        }
+    }
+
+    Cue
+    {
+        Name = MineExplode;
+
+        Variation
+        {
+            Variation Type = 3;
+            Variation Table Type = 1;
+            New Variation on Loop = 0;
+        }
+
+        Sound Entry
+        {
+            Name = MineExplode;
+            Index = 2;
+            Weight Min = 0;
+            Weight Max = 255;
+        }
+    }
+
+    Cue
+    {
+        Name = ShipBoost;
+
+        Variation
+        {
+            Variation Type = 3;
+            Variation Table Type = 1;
+            New Variation on Loop = 0;
+        }
+
+        Sound Entry
+        {
+            Name = ShipBoost;
+            Index = 4;
             Weight Min = 0;
             Weight Max = 255;
         }

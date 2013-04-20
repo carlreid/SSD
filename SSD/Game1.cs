@@ -42,22 +42,35 @@ namespace SSD
         Entity _planet;
         Entity _playSphere;
 
-        List<Entity> _worldEntities = new List<Entity>();
+        List<Entity> _worldEntities = new List<Entity>(150);
 
         //Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
         //List<Bullet> _bullets = new List<Bullet>();
 
         // Declare our Particle System variable
-        TrailParticleSystem shipExaustParticles = null;
-        BoostParticleSystem shipBoostParticles = null;
-        BoostGlowParticleSystem shipBoostGlowParticles = null;
-        SmokeParticleSystem bulletSmokeParticles = null;
-        FireBulletParticleSystem bulletFireParticles = null;
-        IceBulletParticleSystem bulletIceParticles = null;
+        ParticleSystemManager _particleSystemManager = null;
+        TrailParticleSystem _shipExaustParticles = null;
+        BoostParticleSystem _shipBoostParticles = null;
+        BoostGlowParticleSystem _shipBoostGlowParticles = null;
+        SmokeParticleSystem _bulletSmokeParticles = null;
+        FireBulletParticleSystem _bulletFireParticles = null;
+        IceBulletParticleSystem _bulletIceParticles = null;
+        ExplosionRockParticleSystem _rockExplodeParticles = null;
+        ExplosionMineParticleSystem _mineExplodeParticles = null;
 
         //Input States to keep backup
         //KeyboardState l;
         GamePadState _controllerState;
+
+
+        Texture2D _boostOverlay = null;
+        Vector2 _boostOverlayPosition;
+        Texture2D _boostFlame = null;
+        Vector2 _boostFlamePosition;
+        Texture2D _lifeIcon = null;
+        Vector2 _lifeIconPosition;
+        Texture2D _bombIcon = null;
+        Vector2 _bombIconPosition;
 
         public Game1()
         {
@@ -71,49 +84,31 @@ namespace SSD
             if (!e.getAlive())
             {
                 _soundManager.playDeathSound(e);
+
+                if (e is EnemyEntity)
+                {
+                    _renderer.addScore(e.getMatrix(), ((EnemyEntity)e).getScore());
+                    //Spawn particles for dead entity
+                    if (e is EnemyRock)
+                    {
+                        _rockExplodeParticles.Emitter.PositionData.Position = e.getMatrix().Translation;
+                        for (int particleCount = 0; particleCount < 15; ++particleCount)
+                        {
+                            _rockExplodeParticles.AddParticle();
+                        }
+                    }
+                    else if (e is EnemyMine)
+                    {
+                        _mineExplodeParticles.Emitter.PositionData.Position = e.getMatrix().Translation;
+                        for (int particleCount = 0; particleCount < 15; ++particleCount)
+                        {
+                            _mineExplodeParticles.AddParticle();
+                        }
+                    }
+                }
             }
             return !e.getAlive();
         }
-
-        //private Entity getEntity(String entityName)
-        //{
-        //    try
-        //    {
-        //        Entity entity = null;
-        //        _entities.TryGetValue(entityName, out entity);
-        //        return entity;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex);
-        //        throw;
-        //    }
-        //}
-
-        //public static Vector3 MapToSphere(Vector3 coords, WorldMap MAP)
-        //{
-        //    float pi = 3.14159265f;
-        //    float thetaDelta = ((2 * pi) / (MAP.XSize - 1));
-        //    float phiDelta = ((pi) / (MAP.ZSize - .5f));
-        //    float RadiusBase = ((MAP.XSize) / pi / 2f);
-        //    float theta = (coords.Z * thetaDelta);
-        //    float phi = (coords.X * phiDelta);
-
-        //    //Limit the map to half a sphere
-        //    if (theta > pi) { theta = theta - (pi); }
-
-        //    if (theta < 0.0) { theta = theta + (pi); }
-
-        //    if (phi > 2 * pi) { phi = phi - (2 * pi); }
-
-        //    if (phi < 0.0) { phi = phi + (2 * pi); }
-
-        //    Vector3 coords2 = new Vector3();
-        //    coords2.X = (float)(((RadiusBase) * Math.Sin(theta) * Math.Cos(phi)) + MAP.XSize / 2f);
-        //    coords2.Y = (float)((RadiusBase) * Math.Sin(theta) * Math.Sin(phi));
-        //    coords2.Z = (float)(((RadiusBase) * Math.Cos(theta)) + MAP.ZSize / 2f);
-        //    return coords2;
-        //}
 
         /// <summary>
         /// Allows the game to perform any initialization it needs to before starting to run.
@@ -152,32 +147,47 @@ namespace SSD
         {
             _hudFont = Content.Load<SpriteFont>("hudFont");
 
+            _boostOverlay = Content.Load<Texture2D>("GUI/boost_overlay");
+            _boostOverlayPosition = new Vector2(10, graphics.GraphicsDevice.Viewport.Height - (_boostOverlay.Height + 20));
+            _boostFlame = Content.Load<Texture2D>("GUI/boost_flame");
+            _boostFlamePosition = new Vector2(22, graphics.GraphicsDevice.Viewport.Height - (_boostFlame.Height + 30));
+            _lifeIcon = Content.Load<Texture2D>("GUI/lifeIcon");
+            _lifeIconPosition = new Vector2(10, 10);
+            _bombIcon = Content.Load<Texture2D>("GUI/bombIcon");
+            _bombIconPosition = new Vector2(10, 85);
+
             BoundingSphereRenderer.InitializeGraphics(GraphicsDevice, 30);
 
             // Declare a new Particle System instance and Initialize it
-            shipExaustParticles = new TrailParticleSystem(this);
-            shipExaustParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
+            _particleSystemManager = new ParticleSystemManager();
 
-            shipBoostParticles = new BoostParticleSystem(this);
-            shipBoostParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
-            shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipExaustParticles = new TrailParticleSystem(this);
+            _shipBoostParticles = new BoostParticleSystem(this);
+            _shipBoostGlowParticles = new BoostGlowParticleSystem(this);
+            _bulletSmokeParticles = new SmokeParticleSystem(this);
+            _bulletFireParticles = new FireBulletParticleSystem(this);
+            _bulletIceParticles = new IceBulletParticleSystem(this);
+            _rockExplodeParticles = new ExplosionRockParticleSystem(this);
+            _mineExplodeParticles = new ExplosionMineParticleSystem(this);
 
-            shipBoostGlowParticles = new BoostGlowParticleSystem(this);
-            shipBoostGlowParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
-            shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = false;
+            _particleSystemManager.AddParticleSystem(_shipExaustParticles);
+            _particleSystemManager.AddParticleSystem(_shipBoostParticles);
+            _particleSystemManager.AddParticleSystem(_shipBoostGlowParticles);
+            _particleSystemManager.AddParticleSystem(_bulletSmokeParticles);
+            _particleSystemManager.AddParticleSystem(_bulletFireParticles);
+            _particleSystemManager.AddParticleSystem(_bulletIceParticles);
+            _particleSystemManager.AddParticleSystem(_rockExplodeParticles);
+            _particleSystemManager.AddParticleSystem(_mineExplodeParticles);
+            _particleSystemManager.AutoInitializeAllParticleSystems(this.GraphicsDevice, this.Content, null);
 
-            bulletSmokeParticles = new SmokeParticleSystem(this);
-            bulletSmokeParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
-            bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = false;
+            _bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
+            _bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
+            _bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
 
-            bulletFireParticles = new FireBulletParticleSystem(this);
-            bulletFireParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
-            bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
-
-            bulletIceParticles = new IceBulletParticleSystem(this);
-            bulletIceParticles.AutoInitialize(this.GraphicsDevice, this.Content, null);
-            bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
-            
+            _rockExplodeParticles.ChangeExplosionColor(Color.Cyan);
+            //_mineExplodeParticles.ChangeExplosionColor(Color.Red);
             
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -211,7 +221,7 @@ namespace SSD
 
             //Setup managers
             _soundManager = new SoundManager(Content, _playerOne);
-            _spawnManager = new SpawnManager(ref _worldEntities, ref _renderer);
+            _spawnManager = new SpawnManager(ref _worldEntities, ref _renderer, ref _soundManager);
 
             _controllerState = GamePad.GetState(PlayerIndex.One);
             //_spawnManager.spawnRocks(200, _planet);
@@ -225,12 +235,12 @@ namespace SSD
         {
             // TODO: Unload any non ContentManager content here
 
-            shipExaustParticles.Destroy();
-            shipBoostParticles.Destroy();
-            shipBoostGlowParticles.Destroy();
-            bulletSmokeParticles.Destroy();
-            bulletFireParticles.Destroy();
-            bulletIceParticles.Destroy();
+            _shipExaustParticles.Destroy();
+            _shipBoostParticles.Destroy();
+            _shipBoostGlowParticles.Destroy();
+            _bulletSmokeParticles.Destroy();
+            _bulletFireParticles.Destroy();
+            _bulletIceParticles.Destroy();
         }
 
         /// <summary>
@@ -249,7 +259,8 @@ namespace SSD
 
             if (curGamepadState.Buttons.LeftShoulder == ButtonState.Pressed && _controllerState.Buttons.LeftShoulder != ButtonState.Pressed)
             {
-                _playerOne.useBoost();
+                _playerOne.useBoost(_soundManager);
+                
             }
 
             if (curGamepadState.Buttons.RightShoulder == ButtonState.Pressed && _controllerState.Buttons.RightShoulder != ButtonState.Pressed)
@@ -344,7 +355,6 @@ namespace SSD
                     _playerOne.setYaw(0);
                     Quaternion playerRotation = _playerOne.getRotation();
                     _playerOne.setYaw(oldYaw);
-                    //playerRotation *= Quaternion.CreateFromAxisAngle(getEntity("player").getMatrix().Up, MathHelper.ToRadians(angle + 90));
 
                     float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
 
@@ -361,39 +371,63 @@ namespace SSD
                         _worldEntities.Add(newBullet);
                         _soundManager.addAttatchment(LoadedSounds.FIRE_BULLET_FIRED, newBullet);
                     }
-                    _lastBulletShot = 200;
+                    _lastBulletShot = 150;
                 }
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
                 float angle = MathHelper.ToDegrees((float)Math.Atan2(Mouse.GetState().Y - graphics.PreferredBackBufferHeight / 2, Mouse.GetState().X - graphics.PreferredBackBufferWidth / 2));
-
-                //Debug.WriteLine(Mouse.GetState().X);
-
-                //_bullets.Add(new Bullet(getEntity("player").getMatrix().Translation, angle + 90, _renderer.getModel("bullet")));
             }
 
             #endregion
 
-            foreach (Entity entity in _worldEntities)
+
+            //foreach (Entity entity in _worldEntities)
+            //Update all entities
+            for (int entityID = 0; entityID < _worldEntities.Count; ++entityID)
             {
-                entity.update(gameTime.ElapsedGameTime);
-                if (entity is Bullet)
+                _worldEntities[entityID].update(gameTime.ElapsedGameTime);
+                if (_worldEntities[entityID] is Bullet)
                 {
-                    if (entity is IceBullet)
+                    if (_worldEntities[entityID] is IceBullet)
                     {
-                        bulletIceParticles.Emitter.PositionData.Position = entity.getMatrix().Translation;
-                        bulletIceParticles.AddParticle();
+                        _bulletIceParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
+                        _bulletIceParticles.AddParticle();
                     }
                     else
                     {
-                        bulletFireParticles.Emitter.PositionData.Position = entity.getMatrix().Translation;
-                        bulletFireParticles.AddParticle();
+                        _bulletFireParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
+                        _bulletFireParticles.AddParticle();
                     }
+                }
+                else if (_worldEntities[entityID] is EnemyTurret)
+                {
+                    EnemyTurret turret = (EnemyTurret)_worldEntities[entityID];
+
+                    if (!turret.shouldShoot())
+                    {
+                        continue;
+                    }
+
+                    Vector3 direction = _playerOne.getMatrix().Translation - turret.getMatrix().Translation;
+                    direction.Normalize();
+                    float angle = MathHelper.ToDegrees((float)-Math.Atan2(-direction.X, direction.Z)) - 90;
+
+                    float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
+                    _playerOne.setYaw(0);
+                    _playerOne.setYaw(oldYaw);
+
+                    float calcYaw = /*-getEntity("player").getYaw() +*/ angle;
+
+                    Bullet newBullet = new FireBullet(turret.getMatrix().Translation, turret.getRotation(), calcYaw, _renderer.getModel("fireBullet"));
+                    newBullet.setFriendly(false);
+                    _worldEntities.Add(newBullet);
+                    turret.didShoot();
                 }
             }
 
+            #region Collision Checking
             //Check for collision, maybe move elsewhere
             for (int entity = 0; entity < _worldEntities.Count; ++entity)
             {
@@ -441,6 +475,7 @@ namespace SSD
                                             {
                                                 checkEntity.setAlive(false);
                                                 checkEntity.doDamage(currentEntity.getHealth());
+                                                continue;
                                             }
                                         }
                                         else if (checkEntity is PlayerEntity)
@@ -449,30 +484,116 @@ namespace SSD
                                             {
                                                 currentEntity.setAlive(false);
                                                 currentEntity.doDamage(checkEntity.getHealth());
+                                                continue;
                                             }
                                         }
-                                        else
-                                        {
-                                            //Player isn't boosting do mass destruction
-                                            currentEntity.doDamage(currentEntity.getHealth());
-                                            currentEntity.setAlive(false);
-                                            checkEntity.doDamage(checkEntity.getHealth());
-                                            checkEntity.setAlive(false);
-                                        }
+
+                                        //Player isn't boosting do mass destruction
+                                        currentEntity.doDamage(currentEntity.getHealth());
+                                        currentEntity.setAlive(false);
+                                        checkEntity.doDamage(checkEntity.getHealth());
+                                        checkEntity.setAlive(false);
+                                        
 
                                         continue; //Do not check if bullets, this will be game over/remove life.
                                     }
 
                                     //Check to see if either entity is a bullet. If so, apply bullet damage.
-                                    if (currentEntity is Bullet)
-                                    {
-                                        checkEntity.doDamage(((Bullet)currentEntity).getDamage());
-                                        currentEntity.setAlive(false);
-                                    }
+                                    //IF THINGS GO WRONG UNCOMMENT THIS
+                                    //if (currentEntity is Bullet)
+                                    //{
+                                    //    Bullet curBullet = (Bullet)currentEntity;
+                                    //    int elementalBonusDamage = 0;
+
+                                    //    if (!curBullet.isEnemyBullet())
+                                    //    {
+                                    //        break;
+                                    //    }
+
+                                    //    if (checkEntity is EnemyEntity && !curBullet.isEnemyBullet())
+                                    //    {
+                                    //        EnemyEntity enemy = (EnemyEntity)checkEntity;
+                                    //        if (enemy.isIceEnemy())
+                                    //        {
+                                    //            if (curBullet is FireBullet)
+                                    //            {
+                                    //                elementalBonusDamage += 250;
+                                    //            }
+                                    //        }
+                                    //        else
+                                    //        {
+                                    //            if (curBullet is IceBullet)
+                                    //            {
+                                    //                elementalBonusDamage += 250;
+                                    //            }
+                                    //        }
+                                    //    }
+
+                                    //    checkEntity.doDamage(curBullet.getDamage() + elementalBonusDamage);
+                                    //    currentEntity.setAlive(false);
+                                    //}
                                     if (checkEntity is Bullet)
                                     {
-                                        currentEntity.doDamage(((Bullet)checkEntity).getDamage());
-                                        checkEntity.setAlive(false);
+
+                                        Bullet curBullet = (Bullet)checkEntity;
+                                        int elementalBonusDamage = 0;
+
+                                        //if(curBullet.isEnemyBullet()){
+                                        //    break;
+                                        //}
+
+                                        if (currentEntity is EnemyEntity)
+                                        {
+                                            if (!curBullet.getFriendly())
+                                            {
+                                                break;
+                                            }
+
+                                            EnemyEntity enemy = (EnemyEntity)currentEntity;
+                                            if (enemy.isIceEnemy())
+                                            {
+                                                if (curBullet is FireBullet)
+                                                {
+                                                    elementalBonusDamage += 250;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (curBullet is IceBullet)
+                                                {
+                                                    elementalBonusDamage += 250;
+                                                }
+                                            }
+                                            currentEntity.doDamage(((Bullet)checkEntity).getDamage() + elementalBonusDamage);
+                                            checkEntity.setAlive(false);
+                                        }
+                                        else if (currentEntity is PlayerEntity)
+                                        {
+                                            if (curBullet.getFriendly())
+                                            {
+                                                break;
+                                            }
+
+                                            PlayerEntity player = (PlayerEntity)currentEntity;
+                                            if (player.isIceElement())
+                                            {
+                                                if (curBullet is FireBullet)
+                                                {
+                                                    elementalBonusDamage += 250;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (curBullet is IceBullet)
+                                                {
+                                                    elementalBonusDamage += 250;
+                                                }
+                                            }
+                                            currentEntity.doDamage(((Bullet)checkEntity).getDamage() + elementalBonusDamage);
+                                            checkEntity.setAlive(false);
+                                        }
+
+
                                     }
 
                                     //Check to see if the entity health is below 0, if so, mark dead.
@@ -530,30 +651,32 @@ namespace SSD
 
             _worldEntities.RemoveAll(removeEntity);
 
+            #endregion
+
 
             //If player is bossting, modify the trail to emite a blue boost
             if (_playerOne.isBoosting())
             {
                 if (_playerOne.isIceElement())
                 {
-                    shipExaustParticles.TrailStartColor = Color.Blue;
+                    _shipExaustParticles.TrailStartColor = Color.Blue;
                 }
                 else
                 {
-                    shipExaustParticles.TrailStartColor = Color.Orange;
+                    _shipExaustParticles.TrailStartColor = Color.Orange;
                 }
             }
             else
             {
-                shipExaustParticles.TrailStartColor = Color.Red;
+                _shipExaustParticles.TrailStartColor = Color.Red;
             }
 
             //Change emitter positions
-            shipExaustParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Backward * 10;
-            shipBoostParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Forward * 20;
-            shipBoostParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
-            shipBoostGlowParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation +  _playerOne.getMatrix().Up * 10 + _playerOne.getMatrix().Forward * 10;
-            shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
+            _shipExaustParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Backward * 10;
+            _shipBoostParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Forward * 20;
+            _shipBoostParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
+            _shipBoostGlowParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation +  _playerOne.getMatrix().Up * 10 + _playerOne.getMatrix().Forward * 10;
+            _shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
 
             _universe.addRoll(-0.001f);
             _universe.addYaw(-0.005f);
@@ -563,6 +686,7 @@ namespace SSD
             _soundManager.update();
             _fpsManager.update(gameTime);
             _spawnManager.update(gameTime, _planet);
+            _renderer.update(gameTime);
 
             if (_lastBulletShot > 0)
             {
@@ -610,53 +734,53 @@ namespace SSD
             Matrix proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspectRatio, 1.0f, 50000.0f);
 
             //Render all models that are loaded in.
-
-
             foreach (Entity entity in _worldEntities)
             {
                 _renderer.renderEntity(view, proj, entity);
             }
 
             // Set the Particle System's World, View, and Projection matrices so that it knows how to draw the particles properly.
-            shipExaustParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
-            shipBoostParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
-            shipBoostGlowParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
-            bulletSmokeParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
-            bulletFireParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
-            bulletIceParticles.SetWorldViewProjectionMatrices(Matrix.Identity, view, proj);
+            _particleSystemManager.SetWorldViewProjectionMatricesForAllParticleSystems(Matrix.Identity, view, proj);
 
             // Update the Particle System
-            shipExaustParticles.SetCameraPosition(cameraPosition);
-            shipExaustParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            shipBoostParticles.SetCameraPosition(cameraPosition);
-            shipBoostParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            shipBoostGlowParticles.SetCameraPosition(cameraPosition);
-            shipBoostGlowParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            bulletSmokeParticles.SetCameraPosition(cameraPosition);
-            bulletSmokeParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            bulletFireParticles.SetCameraPosition(cameraPosition);
-            bulletFireParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            bulletIceParticles.SetCameraPosition(cameraPosition);
-            bulletIceParticles.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
-
-            shipExaustParticles.Draw();
-            shipBoostParticles.Draw();
-            shipBoostGlowParticles.Draw();
-            bulletSmokeParticles.Draw();
-            bulletFireParticles.Draw();
-            bulletIceParticles.Draw();
+            _particleSystemManager.SetCameraPositionForAllParticleSystems(cameraPosition);
+            _particleSystemManager.UpdateAllParticleSystems((float)gameTime.ElapsedGameTime.TotalSeconds);
+            _particleSystemManager.DrawAllParticleSystems();
 
             base.Draw(gameTime);
 
             //Draw 2D things - AFTER the bloom
-            spriteBatch.Begin();
-            spriteBatch.DrawString(_hudFont, "Player Health: " + ((ModelEntity)_playerOne).getHealth(), new Vector2(0, 0), Color.Green);
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
+            //spriteBatch.DrawString(_hudFont, "Player Health: " + ((ModelEntity)_playerOne).getHealth(), new Vector2(0, 0), Color.LightGreen);
+            //spriteBatch.DrawString(_hudFont, "Boost Count: " + ((PlayerEntity)_playerOne).getBoostCount(), new Vector2(0, 28), Color.LightCyan);
             spriteBatch.DrawString(_hudFont, "FPS: " + _fpsManager.getFPS().ToString(), new Vector2(viewport.Width - 100, 0), Color.White);
+
+            //Draw boost graphic
+            int flameHeight = (int)(_boostFlame.Height * _playerOne.getBoostReplenishedScalar());
+            spriteBatch.Draw(_boostFlame, new Rectangle((int)_boostFlamePosition.X, (int)_boostFlamePosition.Y + _boostFlame.Height - flameHeight, _boostFlame.Width, flameHeight),
+                                          new Rectangle(0, _boostFlame.Height - flameHeight, _boostFlame.Width, flameHeight), Color.White);
+            spriteBatch.Draw(_boostOverlay, _boostOverlayPosition, Color.White);
+
+            //Draw the number of lives remaining
+            for (int numLives = 0; numLives < _playerOne.getLives(); ++numLives)
+            {
+                spriteBatch.Draw(_lifeIcon, new Vector2(_lifeIconPosition.X + ((_lifeIcon.Width + 5) * numLives), _lifeIconPosition.Y), Color.White);
+            }
+
+            //Draw the number of bombs remaining
+            for (int numBombs = 0; numBombs < _playerOne.getBombs(); ++numBombs)
+            {
+                spriteBatch.Draw(_bombIcon, new Vector2(_bombIconPosition.X + ((_bombIcon.Width + 5) * numBombs), _bombIconPosition.Y), Color.White);
+            }
+
+            //Draw all the current scores that should be visible
+            foreach (ScoreText score in _renderer.getScores())
+            {
+                Vector3 screenSpace = GraphicsDevice.Viewport.Project(Vector3.Zero, proj, view, score.getPositionMatrix());
+                String scoreText = score.getScoreAmount().ToString();
+                Vector2 textOffset = _hudFont.MeasureString(scoreText) / 2;
+                spriteBatch.DrawString(_hudFont, score.getScoreAmount().ToString(), new Vector2(screenSpace.X, screenSpace.Y), Color.Red, 0, textOffset, score.getScale(), SpriteEffects.None, 0);
+            }
             spriteBatch.End();
 
 
