@@ -17,7 +17,7 @@ namespace SSD
             _shipSpeed = 0.01f;
             _inBoostPhase = false;
             _boostPhaseTimer = 0;
-
+            _isInDeathCooldown = false;
             _isIceElement = true;
             _currentColour = Color.Cyan;
         }
@@ -25,6 +25,20 @@ namespace SSD
         public override void update(TimeSpan deltaTime)
         {
             base.update(deltaTime);
+
+            //If in death cooldown, reduce the timer and skip any boost replenish time.
+            if (_isInDeathCooldown)
+            {
+                _deathCooldownTimer -= deltaTime.Milliseconds;
+                if (_deathCooldownTimer <= 0)
+                {
+                    _isInDeathCooldown = false;
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             //Add boost to player (based on time, maybe apply to score?)
             if (_boosts < 1)
@@ -56,6 +70,12 @@ namespace SSD
 
         override public void draw(Matrix view, Matrix proj, GraphicsDevice graphicsDevice)
         {
+            //If the player is dead, don't draw.
+            if (_isInDeathCooldown)
+            {
+                return;
+            }
+
             foreach (ModelMesh mesh in getModelContainer().getModel().Meshes)
             {
                 foreach (ModelMeshPart meshPart in mesh.MeshParts)
@@ -135,7 +155,32 @@ namespace SSD
             return _bombs;
         }
 
+        public void removeLife()
+        {
+            --_lives;
+        }
+
+        public void addLife()
+        {
+            ++_lives;
+        }
+
+        public bool getInDeathCooldown()
+        {
+            return _isInDeathCooldown;
+        }
+
+        public void setInDeathCooldown(bool inDeathCooldown)
+        {
+            if (inDeathCooldown)
+            {
+                _deathCooldownTimer = 2500;
+            }
+            _isInDeathCooldown = inDeathCooldown;
+        }
+
         float _shipSpeed;
+        float _deathCooldownTimer;
         int _lives;
         int _boosts;
         int _bombs;
@@ -143,7 +188,7 @@ namespace SSD
         int _boostPhaseTimer;
         int _lastBoostApplied;
         int _boostReplenishTime;
-
+        bool _isInDeathCooldown;
         bool _isIceElement;
         Color _currentColour;
 

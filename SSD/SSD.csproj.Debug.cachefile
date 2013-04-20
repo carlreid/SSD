@@ -45,6 +45,7 @@ Content\Music\game_music.xnb
 Content\Models\ice_planet_texture_0.xnb
 Content\GUI\lifeIcon.xnb
 Content\GUI\bombIcon.xnb
+Content\Textures\ShipExplodeParticle.xnb
 Content\Music\game_music.wma
 Content\XACTProject.xgs
 Content\BulletWaveBank.xwb

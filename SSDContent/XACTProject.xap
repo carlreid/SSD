@@ -16,8 +16,8 @@ Global Settings
     Header File = C:\Users\Carl\SkyDrive\Scripts and Programs\Games Software Development\SSD\SSD\SSDXACT\XACTProject.h;
     Exclude Category Names = 0;
     Exclude Variable Names = 0;
-    Last Modified Low = 2064977270;
-    Last Modified High = 30286866;
+    Last Modified Low = 30286866;
+    Last Modified High = 2064977270;
 
     Category
     {
@@ -221,7 +221,7 @@ Global Settings
 
         RPC Curve
         {
-            Name = Sound::9875e295-f036-44e8-828a-c2dc2a48e057;
+            Name = Sound::f12dcb86-59a5-4711-9c77-f338f9275d60;
             Property = 0;
             Sound = 1;
             Line Color = 4294901760;
@@ -503,8 +503,8 @@ Wave Bank
     Windows Bank Path Edited = 0;
     Seek Tables = 1;
     Compression Preset Name = <none>;
-    Bank Last Revised Low = 494410741;
-    Bank Last Revised High = 30292681;
+    Bank Last Revised Low = 3625307194;
+    Bank Last Revised High = 30293500;
 
     Wave
     {
@@ -618,6 +618,29 @@ Wave Bank
             File Type = 1;
             Last Modified Low = 223666332;
             Last Modified High = 30292681;
+        }
+    }
+
+    Wave
+    {
+        Name = ship_death;
+        File = Sounds\ship_death.wav;
+        Build Settings Last Modified Low = 3555328270;
+        Build Settings Last Modified High = 30293500;
+
+        Cache
+        {
+            Format Tag = 0;
+            Channels = 2;
+            Sampling Rate = 44100;
+            Bits Per Sample = 1;
+            Play Region Offset = 44;
+            Play Region Length = 399360;
+            Loop Region Offset = 0;
+            Loop Region Length = 0;
+            File Type = 1;
+            Last Modified Low = 2108773957;
+            Last Modified High = 30293500;
         }
     }
 }
@@ -1522,6 +1545,53 @@ Sound Bank
         }
     }
 
+    Sound
+    {
+        Name = ShipDeath;
+        Volume = 0;
+        Pitch = 0;
+        Priority = 0;
+
+        Category Entry
+        {
+            Name = Default;
+        }
+
+        Track
+        {
+            Volume = 0;
+            Use Filter = 0;
+
+            Play Wave Event
+            {
+                Break Loop = 0;
+                Use Speaker Position = 0;
+                Use Center Speaker = 1;
+                New Speaker Position On Loop = 1;
+                Speaker Position Angle = 0.000000;
+                Speaker Position Arc = 0.000000;
+
+                Event Header
+                {
+                    Timestamp = 0;
+                    Relative = 0;
+                    Random Recurrence = 0;
+                    Random Offset = 0;
+                }
+
+                Wave Entry
+                {
+                    Bank Name = EntityWaveBank;
+                    Bank Index = 2;
+                    Entry Name = ship_death;
+                    Entry Index = 5;
+                    Weight = 255;
+                    Weight Min = 0;
+                }
+            }
+        }
+    }
+
     Cue
     {
         Name = RockMoving;
@@ -1617,6 +1687,26 @@ Sound Bank
         {
             Name = ShipBoost;
             Index = 4;
+            Weight Min = 0;
+            Weight Max = 255;
+        }
+    }
+
+    Cue
+    {
+        Name = ShipDeath;
+
+        Variation
+        {
+            Variation Type = 3;
+            Variation Table Type = 1;
+            New Variation on Loop = 0;
+        }
+
+        Sound Entry
+        {
+            Name = ShipDeath;
+            Index = 5;
             Weight Min = 0;
             Weight Max = 255;
         }

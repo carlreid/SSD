@@ -30,6 +30,7 @@ namespace SSD
         SpawnManager _spawnManager;
         BloomComponent bloom;
 
+        const float BLAST_RADIUS = 250.0f;
         float aspectRatio;
         float _lastBulletShot = 0;
 
@@ -57,6 +58,7 @@ namespace SSD
         IceBulletParticleSystem _bulletIceParticles = null;
         ExplosionRockParticleSystem _rockExplodeParticles = null;
         ExplosionMineParticleSystem _mineExplodeParticles = null;
+        ShipExplodeParticleSystem _shipExplodeParticles = null;
 
         //Input States to keep backup
         //KeyboardState l;
@@ -81,6 +83,46 @@ namespace SSD
 
         private bool removeEntity(Entity e)
         {
+            //Special case when play dies
+            if (e is PlayerEntity)
+            {
+                if (_playerOne.getHealth() <= 0)
+                {
+                    _playerOne.removeLife();
+                    _playerOne.setHealth(1000);
+                    _playerOne.setInDeathCooldown(true);
+                    _soundManager.playDeathSound(_playerOne);
+
+                    //Cause massive explosion.
+                    _shipExplodeParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation;
+                    _shipExplodeParticles.ExplosionIntensity = 2000;
+                    _shipExplodeParticles.Explode();
+
+                    if (_playerOne.getLives() < 0)
+                    {
+                        _playerOne.setAlive(false);
+                    }
+                    else
+                    {
+                        _playerOne.setAlive(true);
+                    }
+
+                    _worldEntities.ForEach(delegate(Entity entity)
+                    {
+                        if (entity is EnemyEntity)
+                        {
+                            Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
+                            if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
+                            {
+                                entity.setAlive(false);
+                            }
+                        }
+                    });
+
+                    return !e.getAlive();
+                }
+            }
+
             if (!e.getAlive())
             {
                 _soundManager.playDeathSound(e);
@@ -169,6 +211,7 @@ namespace SSD
             _bulletIceParticles = new IceBulletParticleSystem(this);
             _rockExplodeParticles = new ExplosionRockParticleSystem(this);
             _mineExplodeParticles = new ExplosionMineParticleSystem(this);
+            _shipExplodeParticles = new ShipExplodeParticleSystem(this);
 
             _particleSystemManager.AddParticleSystem(_shipExaustParticles);
             _particleSystemManager.AddParticleSystem(_shipBoostParticles);
@@ -178,6 +221,7 @@ namespace SSD
             _particleSystemManager.AddParticleSystem(_bulletIceParticles);
             _particleSystemManager.AddParticleSystem(_rockExplodeParticles);
             _particleSystemManager.AddParticleSystem(_mineExplodeParticles);
+            _particleSystemManager.AddParticleSystem(_shipExplodeParticles);
             _particleSystemManager.AutoInitializeAllParticleSystems(this.GraphicsDevice, this.Content, null);
 
             _shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
@@ -185,6 +229,7 @@ namespace SSD
             _bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
             _bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
             _bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipExplodeParticles.Emitter.EmitParticlesAutomatically = false;
 
             _rockExplodeParticles.ChangeExplosionColor(Color.Cyan);
             //_mineExplodeParticles.ChangeExplosionColor(Color.Red);
@@ -241,6 +286,7 @@ namespace SSD
             _bulletSmokeParticles.Destroy();
             _bulletFireParticles.Destroy();
             _bulletIceParticles.Destroy();
+            _shipExplodeParticles.Destroy();
         }
 
         /// <summary>
@@ -278,15 +324,16 @@ namespace SSD
 
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y != 0)
             {
-                float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X));
-                _playerOne.setYaw(0);
-                camUp = _playerOne.getMatrix().Left;
-                _playerOne.setYaw(angle);
+                if (!_playerOne.getInDeathCooldown())
+                {
+                    float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X));
+                    _playerOne.setYaw(0);
+                    camUp = _playerOne.getMatrix().Left;
+                    _playerOne.setYaw(angle);
 
-                //Debug.WriteLine(angle);
-
-                _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * _playerOne.getSpeed()));
-                _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * _playerOne.getSpeed()));
+                    _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * _playerOne.getSpeed()));
+                    _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * _playerOne.getSpeed()));
+                }
             }
 
             if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) ||
