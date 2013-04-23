@@ -61,7 +61,7 @@ namespace DPSF.ParticleSystems
         //===========================================================
         public override void AutoInitialize(GraphicsDevice cGraphicsDevice, ContentManager cContentManager, SpriteBatch cSpriteBatch)
         {
-            InitializeTexturedQuadParticleSystem(cGraphicsDevice, cContentManager, 1000, 50000,
+            InitializeTexturedQuadParticleSystem(cGraphicsDevice, cContentManager, 1000, 5000,
                                                     UpdateVertexProperties, "Textures/Particle");
 
             LoadParticleSystem();

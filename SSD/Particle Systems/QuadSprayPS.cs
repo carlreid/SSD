@@ -36,7 +36,7 @@ namespace DPSF.ParticleSystems
 		//===========================================================
 		public override void AutoInitialize(GraphicsDevice cGraphicsDevice, ContentManager cContentManager, SpriteBatch cSpriteBatch)
 		{
-			InitializeQuadParticleSystem(cGraphicsDevice, cContentManager, 1000, 50000, UpdateVertexProperties);
+			InitializeQuadParticleSystem(cGraphicsDevice, cContentManager, 1000, 5000, UpdateVertexProperties);
 			Name = "Quad Spray";
 			LoadSprayEvents();
 			ToggleGravity();

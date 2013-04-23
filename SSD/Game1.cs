@@ -25,14 +25,20 @@ namespace SSD
         SpriteFont _hudFont;
         Random _randomGen = new Random();
 
+        FontFile _fontFile;
+        Texture2D _fontTexture;
+        FontRenderer _fontRenderer;
+
         SoundManager _soundManager;
         FPSManager _fpsManager = new FPSManager();
         SpawnManager _spawnManager;
         BloomComponent bloom;
+        GameLevel _currentLevel;
 
         const float BLAST_RADIUS = 250.0f;
         float aspectRatio;
         float _lastBulletShot = 0;
+        int _currentScore;
 
         Draw _renderer;
         Vector3 camUp = Vector3.Left;
@@ -45,6 +51,9 @@ namespace SSD
 
         List<Entity> _worldEntities = new List<Entity>(150);
 
+        int drawCount = 0;
+        int updateCount = 0;
+
         //Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
         //List<Bullet> _bullets = new List<Bullet>();
 
@@ -53,13 +62,14 @@ namespace SSD
         TrailParticleSystem _shipExaustParticles = null;
         BoostParticleSystem _shipBoostParticles = null;
         BoostGlowParticleSystem _shipBoostGlowParticles = null;
-        SmokeParticleSystem _bulletSmokeParticles = null;
+        //SmokeParticleSystem _bulletSmokeParticles = null;
         FireBulletParticleSystem _bulletFireParticles = null;
         IceBulletParticleSystem _bulletIceParticles = null;
         ExplosionRockParticleSystem _rockExplodeParticles = null;
         ExplosionMineParticleSystem _mineExplodeParticles = null;
         ShipExplodeParticleSystem _shipExplodeParticles = null;
         ShipBombExplodeParticleSystem _shipBombExplodeParticles = null;
+        PowerUpParticleSystem _powerUpParticles = null;
 
         //Input States to keep backup
         //KeyboardState l;
@@ -112,7 +122,7 @@ namespace SSD
                     {
                         if (entity is EnemyEntity)
                         {
-                            Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
+                            //Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
                             if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
                             {
                                 entity.setAlive(false);
@@ -130,23 +140,76 @@ namespace SSD
 
                 if (e is EnemyEntity)
                 {
-                    _renderer.addScore(e.getMatrix(), ((EnemyEntity)e).getScore());
+                    int scoreToAdd = (int)(((EnemyEntity)e).getScore() * _playerOne.getScoreMultiplier());
+                    _renderer.addScore(e.getMatrix(), scoreToAdd);
+                    _currentScore += scoreToAdd;
+
+                    //Spawn a power up if lucky!
+                    if (!((EnemyEntity)e).isSpawning())
+                    {
+                        //Calculate a nice sport for the power up to be at. If you use the middle of an entity, if it's too large the player can't pick up!
+                        //Calculate direction vector
+                        Vector3 directionToPlanet = _planet.getMatrix().Translation - e.getMatrix().Translation ;
+                        directionToPlanet.Normalize();
+
+                        //Initial spawn vector
+                        Vector3 spawnPoint = e.getMatrix().Translation + directionToPlanet;
+
+                        //Get player's bounding sphere, we'll know that they can reach it then.
+                        BoundingSphere playerBoundingSize = _playerOne.getBoundingSphere();
+                        playerBoundingSize.Center = spawnPoint;
+
+                        //Keep moving till intersecting with the play surface
+                        while (!playerBoundingSize.Intersects(((PlaySphere)_playSphere).getBoundingSphere()))
+                        {
+                            playerBoundingSize.Center += directionToPlanet;
+                        }
+
+                        //Set the spawnPoint to the new value and use below.
+                        spawnPoint = playerBoundingSize.Center;
+
+                        switch (_randomGen.Next(0, 50))
+                        {
+                            case 1:
+                                _worldEntities.Add(new SpeedUpPU(spawnPoint, _renderer.getModel("speedPowerUp")));
+                                break;
+                            case 2:
+                                _worldEntities.Add(new SlowDownPU(spawnPoint, _renderer.getModel("slowPowerUp")));
+                                break;
+                            case 3:
+                                _worldEntities.Add(new BulletSpeedPU(spawnPoint, _renderer.getModel("ammoPowerUp")));
+                                break;
+                            case 4:
+                                _worldEntities.Add(new BombPU(spawnPoint, _renderer.getModel("bombPowerUp")));
+                                break;
+                            default:
+                                switch (_randomGen.Next(0, 200))
+                                {
+                                    case 1:
+                                        _worldEntities.Add(new LifePU(spawnPoint, _renderer.getModel("lifePowerUp")));
+                                        break;
+                                    default:
+                                        _worldEntities.Add(new MultiplierPU(spawnPoint, _renderer.getModel("multiplierPowerUp")));
+                                        break;
+                                }
+                                break;
+                        }
+                    }
+
                     //Spawn particles for dead entity
                     if (e is EnemyRock)
                     {
                         _rockExplodeParticles.Emitter.PositionData.Position = e.getMatrix().Translation;
-                        for (int particleCount = 0; particleCount < 15; ++particleCount)
-                        {
-                            _rockExplodeParticles.AddParticle();
-                        }
+                        _rockExplodeParticles.AddParticles(30);
+                        //_rockExplodeParticles.ExplosionIntensity = 60;
+                        //_rockExplodeParticles.Explode();
                     }
                     else if (e is EnemyMine)
                     {
                         _mineExplodeParticles.Emitter.PositionData.Position = e.getMatrix().Translation;
-                        for (int particleCount = 0; particleCount < 15; ++particleCount)
-                        {
-                            _mineExplodeParticles.AddParticle();
-                        }
+                        _mineExplodeParticles.AddParticles(30);
+                        //_mineExplodeParticles.ExplosionIntensity = 60;
+                        //_mineExplodeParticles.Explode();
                     }
                 }
             }
@@ -199,6 +262,10 @@ namespace SSD
             _bombIcon = Content.Load<Texture2D>("GUI/bombIcon");
             _bombIconPosition = new Vector2(10, 85);
 
+            _fontFile = FontLoader.Load("Content/GUI/ui_font.fnt");
+            _fontTexture = Content.Load<Texture2D>("GUI/ui_font_0");
+            _fontRenderer = new FontRenderer(_fontFile, _fontTexture);
+
             BoundingSphereRenderer.InitializeGraphics(GraphicsDevice, 30);
 
             // Declare a new Particle System instance and Initialize it
@@ -207,33 +274,40 @@ namespace SSD
             _shipExaustParticles = new TrailParticleSystem(this);
             _shipBoostParticles = new BoostParticleSystem(this);
             _shipBoostGlowParticles = new BoostGlowParticleSystem(this);
-            _bulletSmokeParticles = new SmokeParticleSystem(this);
+            //_bulletSmokeParticles = new SmokeParticleSystem(this);
             _bulletFireParticles = new FireBulletParticleSystem(this);
             _bulletIceParticles = new IceBulletParticleSystem(this);
             _rockExplodeParticles = new ExplosionRockParticleSystem(this);
             _mineExplodeParticles = new ExplosionMineParticleSystem(this);
             _shipExplodeParticles = new ShipExplodeParticleSystem(this);
             _shipBombExplodeParticles = new ShipBombExplodeParticleSystem(this);
+            _powerUpParticles = new PowerUpParticleSystem(this);
 
             _particleSystemManager.AddParticleSystem(_shipExaustParticles);
             _particleSystemManager.AddParticleSystem(_shipBoostParticles);
             _particleSystemManager.AddParticleSystem(_shipBoostGlowParticles);
-            _particleSystemManager.AddParticleSystem(_bulletSmokeParticles);
+            //_particleSystemManager.AddParticleSystem(_bulletSmokeParticles);
             _particleSystemManager.AddParticleSystem(_bulletFireParticles);
             _particleSystemManager.AddParticleSystem(_bulletIceParticles);
             _particleSystemManager.AddParticleSystem(_rockExplodeParticles);
             _particleSystemManager.AddParticleSystem(_mineExplodeParticles);
             _particleSystemManager.AddParticleSystem(_shipExplodeParticles);
             _particleSystemManager.AddParticleSystem(_shipBombExplodeParticles);
+            _particleSystemManager.AddParticleSystem(_powerUpParticles);
             _particleSystemManager.AutoInitializeAllParticleSystems(this.GraphicsDevice, this.Content, null);
 
             _shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
             _shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = false;
-            _bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
+            //_bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
             _bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
             _bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
             _shipExplodeParticles.Emitter.EmitParticlesAutomatically = false;
             _shipBombExplodeParticles.Emitter.EmitParticlesAutomatically = false;
+            _powerUpParticles.Emitter.EmitParticlesAutomatically = false;
+
+            _rockExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
+            _mineExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
+            _shipExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
 
             _rockExplodeParticles.ChangeExplosionColor(Color.Cyan);
             //_mineExplodeParticles.ChangeExplosionColor(Color.Red);
@@ -254,6 +328,13 @@ namespace SSD
             _renderer.addModel("iceBullet", "Models\\iceBullet");
             _renderer.addModel("fireBullet", "Models\\fireBullet");
             _renderer.addModel("playSphere", "Models\\play_sphere");
+            _renderer.addModel("speedPowerUp", "Models\\pu_speed");
+            _renderer.addModel("slowPowerUp", "Models\\pu_slow");
+            _renderer.addModel("ammoPowerUp", "Models\\pu_ammo");
+            _renderer.addModel("lifePowerUp", "Models\\pu_health");
+            _renderer.addModel("shieldPowerUp", "Models\\pu_shield");
+            _renderer.addModel("bombPowerUp", "Models\\pu_bomb");
+            _renderer.addModel("multiplierPowerUp", "Models\\pu_multiplier");
 
             //Create entities
             _worldEntities.Add(new PlayerEntity(new Vector3(0, 400f, 0), _renderer.getModel("playerShip"), 1f, 90));
@@ -272,6 +353,9 @@ namespace SSD
             _soundManager = new SoundManager(Content, _playerOne);
             _spawnManager = new SpawnManager(ref _worldEntities, ref _renderer, ref _soundManager);
 
+            //Start level
+            _currentLevel = new LaveLevel(_spawnManager, _randomGen);
+
             _controllerState = GamePad.GetState(PlayerIndex.One);
             //_spawnManager.spawnRocks(200, _planet);
         }
@@ -287,11 +371,12 @@ namespace SSD
             _shipExaustParticles.Destroy();
             _shipBoostParticles.Destroy();
             _shipBoostGlowParticles.Destroy();
-            _bulletSmokeParticles.Destroy();
+            //_bulletSmokeParticles.Destroy();
             _bulletFireParticles.Destroy();
             _bulletIceParticles.Destroy();
             _shipExplodeParticles.Destroy();
             _shipBombExplodeParticles.Destroy();
+            _powerUpParticles.Destroy();
         }
 
         /// <summary>
@@ -301,6 +386,7 @@ namespace SSD
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
+            updateCount++;
 
             GamePadState curGamepadState = GamePad.GetState(PlayerIndex.One);
 
@@ -322,7 +408,7 @@ namespace SSD
                     {
                         if (entity is EnemyEntity)
                         {
-                            Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
+                            //Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
                             if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
                             {
                                 entity.setAlive(false);
@@ -354,8 +440,8 @@ namespace SSD
                     camUp = _playerOne.getMatrix().Left;
                     _playerOne.setYaw(angle);
 
-                    _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * _playerOne.getSpeed()));
-                    _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * _playerOne.getSpeed()));
+                    _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * _playerOne.getSpeed() /* * (gameTime.ElapsedGameTime.Milliseconds / 10) */));
+                    _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * _playerOne.getSpeed() /*  * (gameTime.ElapsedGameTime.Milliseconds / 10) */));
                 }
             }
 
@@ -419,29 +505,43 @@ namespace SSD
             {
                 if (_lastBulletShot <= 0)
                 {
-                    float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
+                    if (!_playerOne.getInDeathCooldown())
+                    {
+                        float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
 
-                    float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
-                    _playerOne.setYaw(0);
-                    Quaternion playerRotation = _playerOne.getRotation();
-                    _playerOne.setYaw(oldYaw);
+                        float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
+                        _playerOne.setYaw(0);
+                        Quaternion playerRotation = _playerOne.getRotation();
+                        _playerOne.setYaw(oldYaw);
 
-                    float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
+                        float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
 
-                    if(_playerOne.isIceElement()){
-                        for (int iceOffset = 0; iceOffset < 4; ++iceOffset)
+                        if (_playerOne.isIceElement())
                         {
-                            Bullet newBullet = new IceBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw - 15 + (iceOffset * 10), _renderer.getModel("iceBullet"), _randomGen.Next(1500, 3000), (float)_randomGen.NextDouble() + 0.5f);
-                            newBullet.setSpeed((float)_randomGen.NextDouble() * 0.5f + 0.5f);
-                            _worldEntities.Add(newBullet);
-                            _soundManager.addAttatchment(LoadedSounds.ICE_BULLET_FIRED, newBullet);
+                            for (int iceOffset = 0; iceOffset < 4; ++iceOffset)
+                            {
+                                Bullet newBullet = new IceBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw - 15 + (iceOffset * 10), _renderer.getModel("iceBullet"), _randomGen.Next(1500, 3000), (float)_randomGen.NextDouble() + 0.5f);
+                                newBullet.setSpeed((float)_randomGen.NextDouble() * 0.5f + 0.5f);
+                                _worldEntities.Add(newBullet);
+                                _soundManager.addAttatchment(LoadedSounds.ICE_BULLET_FIRED, newBullet);
+                            }
                         }
-                    } else {
-                        Bullet newBullet = new FireBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("fireBullet"));
-                        _worldEntities.Add(newBullet);
-                        _soundManager.addAttatchment(LoadedSounds.FIRE_BULLET_FIRED, newBullet);
+                        else
+                        {
+                            Bullet newBullet = new FireBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("fireBullet"));
+                            _worldEntities.Add(newBullet);
+                            _soundManager.addAttatchment(LoadedSounds.FIRE_BULLET_FIRED, newBullet);
+                        }
+
+                        //Reset bullet timer
+                        _lastBulletShot = 250 * _playerOne.getShootingSpeed();
+
+                        //If multiple shooting speeds have been picke dup, just cap at 50, seems like a good speed.
+                        if (_lastBulletShot < 50)
+                        {
+                            _lastBulletShot = 50;
+                        }
                     }
-                    _lastBulletShot = 150;
                 }
             }
 
@@ -455,9 +555,20 @@ namespace SSD
 
             //foreach (Entity entity in _worldEntities)
             //Update all entities
+            float calc = gameTime.ElapsedGameTime.Ticks * _playerOne.getAffectOnTime();
+            TimeSpan playerAffectOnTime = new TimeSpan((long)calc);
             for (int entityID = 0; entityID < _worldEntities.Count; ++entityID)
             {
-                _worldEntities[entityID].update(gameTime.ElapsedGameTime);
+                if (_worldEntities[entityID] is PlayerEntity)
+                {
+                    _worldEntities[entityID].update(gameTime.ElapsedGameTime);
+                }
+                else
+                {
+                    _worldEntities[entityID].update(playerAffectOnTime);
+                }
+
+                //_worldEntities[entityID].update(gameTime.ElapsedGameTime);
                 if (_worldEntities[entityID] is Bullet)
                 {
                     if (_worldEntities[entityID] is IceBullet)
@@ -480,20 +591,50 @@ namespace SSD
                         continue;
                     }
 
+
+                    Vector3 Va = _playerOne.getMatrix().Translation;
+                    Vector3 Vb = turret.getMatrix().Translation;
+                    Va.Normalize();
+                    Vb.Normalize();
+
+
+                    //sina = |Va x Vb| / ( |Va| * |Vb| )
+                    //cosa = (Va . Vb) / ( |Va| * |Vb| )
+
+                    //angle = atan2( sina, cosa )
+
+                    //sign = Vn . ( Va x Vb )
+                    //if(sign<0)
+                    //{
+                    //    angle=-angle
+                    //}
+
+
+                    float sina = Vector3.Cross(Va, Vb).Length() / (Va.Length() * Vb.Length());
+                    float cosa = Vector3.Dot(Va, Vb) / (Va.Length() * Vb.Length());
+                    //float angle = (float)MathHelper.ToDegrees((float)Math.Atan2(sina, cosa));
+                    float sign = Vector3.Dot(_playerOne.getMatrix().Up, Vector3.Cross(Va, Vb));
+
                     Vector3 direction = _playerOne.getMatrix().Translation - turret.getMatrix().Translation;
                     direction.Normalize();
                     float angle = MathHelper.ToDegrees((float)-Math.Atan2(-direction.X, direction.Z)) - 90;
 
-                    float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
-                    _playerOne.setYaw(0);
-                    _playerOne.setYaw(oldYaw);
+                    float calcYaw = angle;
+                    if (sign < 0)
+                    {
+                        calcYaw = -angle;
+                    }
 
-                    float calcYaw = /*-getEntity("player").getYaw() +*/ angle;
 
                     Bullet newBullet = new FireBullet(turret.getMatrix().Translation, turret.getRotation(), calcYaw, _renderer.getModel("fireBullet"));
                     newBullet.setFriendly(false);
                     _worldEntities.Add(newBullet);
                     turret.didShoot();
+                }
+                else if (_worldEntities[entityID] is PowerUp)
+                {
+                    _powerUpParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
+                    _powerUpParticles.AddParticles(1);
                 }
             }
 
@@ -713,6 +854,19 @@ namespace SSD
                         }
                     }
                 }
+                else if (_worldEntities[entity] is PowerUp) //Special check for Power Ups
+                {
+                    //As we know it is a Power Up, cast it to get access to functions.
+                    PowerUp currentEntity = (PowerUp)_worldEntities[entity];
+
+                    //Check Collision between player and power up
+                    if (_playerOne.getBoundingSphere().Intersects(currentEntity.getBoundingSphere()))
+                    {
+                        _playerOne.addPowerUp(currentEntity);
+                        currentEntity.setAlive(false);
+                    }
+
+                }
                 else
                 {
                     continue;
@@ -753,9 +907,10 @@ namespace SSD
             _planet.addRoll(0.02f);
             _planet.addPitch(0.05f);
 
-            _soundManager.update();
+            _soundManager.update(gameTime);
             _fpsManager.update(gameTime);
             _spawnManager.update(gameTime, _planet);
+            _currentLevel.update(gameTime, _planet);
             _renderer.update(gameTime);
 
             if (_lastBulletShot > 0)
@@ -819,11 +974,14 @@ namespace SSD
 
             base.Draw(gameTime);
 
-            //Draw 2D things - AFTER the bloom
+            ////Draw 2D things - AFTER bloom
             spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-            //spriteBatch.DrawString(_hudFont, "Player Health: " + ((ModelEntity)_playerOne).getHealth(), new Vector2(0, 0), Color.LightGreen);
-            //spriteBatch.DrawString(_hudFont, "Boost Count: " + ((PlayerEntity)_playerOne).getBoostCount(), new Vector2(0, 28), Color.LightCyan);
-            spriteBatch.DrawString(_hudFont, "FPS: " + _fpsManager.getFPS().ToString(), new Vector2(viewport.Width - 100, 0), Color.White);
+            drawCount++;
+            spriteBatch.DrawString(_hudFont, "FPS: " + _fpsManager.getFPS().ToString(), new Vector2(viewport.Width - 100, viewport.Height - 30), Color.White);
+            spriteBatch.DrawString(_hudFont, "Draw: " + drawCount.ToString(), new Vector2(viewport.Width - 160, viewport.Height - 60), Color.White);
+            spriteBatch.DrawString(_hudFont, "Update: " + updateCount.ToString(), new Vector2(viewport.Width - 180, viewport.Height - 90), Color.White);
+
+            spriteBatch.DrawString(_hudFont, _playerOne.getHealth().ToString("0,0"), new Vector2(300, 300), Color.Black);
 
             //Draw boost graphic
             int flameHeight = (int)(_boostFlame.Height * _playerOne.getBoostReplenishedScalar());
@@ -835,12 +993,22 @@ namespace SSD
             for (int numLives = 0; numLives < _playerOne.getLives(); ++numLives)
             {
                 spriteBatch.Draw(_lifeIcon, new Vector2(_lifeIconPosition.X + ((_lifeIcon.Width + 5) * numLives), _lifeIconPosition.Y), Color.White);
+                if (numLives == 2 && _playerOne.getLives() > 3)
+                {
+                    _fontRenderer.DrawText(spriteBatch, new Vector2(_lifeIconPosition.X + ((_lifeIcon.Width + 5) * (numLives + 1)), _lifeIconPosition.Y - 10), "+" + (_playerOne.getLives() - 3).ToString());
+                    break;
+                }
             }
 
             //Draw the number of bombs remaining
             for (int numBombs = 0; numBombs < _playerOne.getBombs(); ++numBombs)
             {
                 spriteBatch.Draw(_bombIcon, new Vector2(_bombIconPosition.X + ((_bombIcon.Width + 5) * numBombs), _bombIconPosition.Y), Color.White);
+                if (numBombs == 2 && _playerOne.getBombs() > 3)
+                {
+                    _fontRenderer.DrawText(spriteBatch, new Vector2(_bombIconPosition.X + ((_bombIcon.Width + 5) * (numBombs + 1)), _bombIconPosition.Y - 10), "+" + (_playerOne.getBombs() - 3).ToString());
+                    break;
+                }
             }
 
             //Draw all the current scores that should be visible
@@ -851,10 +1019,37 @@ namespace SSD
                 Vector2 textOffset = _hudFont.MeasureString(scoreText) / 2;
                 spriteBatch.DrawString(_hudFont, score.getScoreAmount().ToString(), new Vector2(screenSpace.X, screenSpace.Y), Color.Red, 0, textOffset, score.getScale(), SpriteEffects.None, 0);
             }
+
+            //Draw any warnings from next spawn
+            if (_currentLevel.drawWarning())
+            {
+                _soundManager.playWarningSound((int)_currentLevel.warningTime().TotalMilliseconds);
+                string outputString = "Incoming! " + _currentLevel.warningTime().Seconds.ToString() + ":" + _currentLevel.warningTime().Milliseconds.ToString();
+                float textScale = 1.0f;
+                //int textWidth = _fontRenderer.TextWidth(outputString, textScale); //Not a fixed width so moves about as lot...
+                _fontRenderer.DrawText(spriteBatch, new Vector2((viewport.Width / 2) - 250, viewport.Height - 100), outputString, textScale, _currentLevel.warningColor());
+            }
+
+            //Draw Score
+            _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width - 25, 20), formatNumericToString(_currentScore), 0.8f, Color.Red, true);
+            _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width - 25, 80), _playerOne.getScoreMultiplier().ToString("0.0") + "x", 0.3f, Color.White, true);
+
             spriteBatch.End();
 
 
-
         }
+
+        string formatNumericToString(int number)
+        {
+            if (number <= 999 && number >= -999)
+            {
+                return number.ToString();
+            }
+            else
+            {
+                return number.ToString("0,0");
+            }
+        }
+
     }
 }

@@ -112,7 +112,7 @@ namespace DPSF.ParticleSystems
         //===========================================================
         public override void AutoInitialize(GraphicsDevice graphicsDevice, ContentManager contentManager, SpriteBatch spriteBatch)
         {
-            InitializeTexturedQuadParticleSystem(graphicsDevice, contentManager, 1000, 50000,
+            InitializeTexturedQuadParticleSystem(graphicsDevice, contentManager, 1000, 5000,
                                                 UpdateVertexProperties, "Textures/ExplosionParticles");
 
             Name = "Explosion - Shockwave";

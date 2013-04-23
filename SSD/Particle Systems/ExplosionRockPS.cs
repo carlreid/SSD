@@ -73,7 +73,7 @@ namespace DPSF.ParticleSystems
         //===========================================================
         public override void AutoInitialize(GraphicsDevice graphicsDevice, ContentManager contentManager, SpriteBatch spriteBatch)
         {
-            InitializeSpriteParticleSystem(graphicsDevice, contentManager, 1000, 50000, "Textures/ExplosionParticles", spriteBatch);
+            InitializeSpriteParticleSystem(graphicsDevice, contentManager, 1000, 5000, "Textures/ExplosionParticles", spriteBatch);
 
             Name = "Explosion - Debris";
             LoadEvents();

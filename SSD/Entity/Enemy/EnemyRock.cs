@@ -16,8 +16,8 @@ namespace SSD
             _forwardSpeed = (((float)ran.NextDouble() - 0.5f) * 4) * 0.001f;
             _sideSpeed = (((float)ran.NextDouble() - 0.5f) * 4) * 0.001f;
             _speed = 1.0f;
-            _myScore = 1400;
-            base.setHealth(300);
+            _myScore = (int)(1400 * scale);
+            base.setHealth((int)(600 * scale));
         }
 
         override public Matrix getMatrix()

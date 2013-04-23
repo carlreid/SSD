@@ -72,6 +72,11 @@ namespace SSD
             _isSpawning = isSpawning;
         }
 
+        public bool isSpawning()
+        {
+            return _isSpawning;
+        }
+
         public bool isIceEnemy()
         {
             return _isIceEnemy;

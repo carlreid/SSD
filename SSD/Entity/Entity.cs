@@ -99,6 +99,11 @@ namespace SSD
             _rotation = Quaternion.CreateFromYawPitchRoll(_scale, _pitch, _roll);
         }
 
+        public void setRotation(Quaternion rotation)
+        {
+            _rotation = rotation;
+        }
+
         public void addYaw(float yaw)
         {
             _yaw += MathHelper.ToRadians(yaw);

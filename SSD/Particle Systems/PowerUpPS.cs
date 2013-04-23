@@ -14,18 +14,17 @@ namespace DPSF.ParticleSystems
 #if (WINDOWS)
     [Serializable]
 #endif
-    class BoostParticleSystem : DefaultSprite3DBillboardParticleSystem
+    class PowerUpParticleSystem : DefaultSprite3DBillboardParticleSystem
     {
         /// <summary>
         /// Constructor
         /// </summary>
-        public BoostParticleSystem(Game cGame) : base(cGame) { }
+        public PowerUpParticleSystem(Game cGame) : base(cGame) { }
 
         //===========================================================
         // Structures and Variables
         //===========================================================
-        private Color[] msaColors = { Color.White, Color.Gray, Color.Black, Color.Green, Color.Yellow, Color.Red, Color.Pink, Color.Brown, Color.Blue, new Color(255, 200, 255) };
-        private int miCurrentColor = 9;
+        private Color particleColor = Color.Pink;
 
         public float mfColorBlendAmount = 0.5f;
         public Vector3 mcExternalObjectPosition = Vector3.Zero;
@@ -66,10 +65,10 @@ namespace DPSF.ParticleSystems
             cParticle.Position = Emitter.PositionData.Position;
             cParticle.Position += new Vector3(0, 0, 0);
             cParticle.Size = RandomNumber.Next(5, 10);
-            cParticle.Color = msaColors[miCurrentColor];
+            cParticle.Color = particleColor;
             cParticle.Rotation = RandomNumber.Between(0, MathHelper.TwoPi);
 
-            cParticle.Velocity = new Vector3(RandomNumber.Next(-15, 15), RandomNumber.Next(-15, 15), RandomNumber.Next(-15, 15));
+            cParticle.Velocity = new Vector3(RandomNumber.Next(-15, 15), RandomNumber.Next(-5, 30), RandomNumber.Next(-15, 15));
             cParticle.Acceleration = Vector3.Zero;
             cParticle.RotationalVelocity = RandomNumber.Between(-MathHelper.Pi, MathHelper.Pi);
 
@@ -85,10 +84,10 @@ namespace DPSF.ParticleSystems
             cParticle.Position = Emitter.PositionData.Position;
             cParticle.Position += new Vector3(0, 0, 0);
             cParticle.Size = RandomNumber.Next(5, 12);
-            cParticle.Color = msaColors[miCurrentColor];
+            cParticle.Color = particleColor;
             cParticle.Rotation = RandomNumber.Between(0, MathHelper.TwoPi);
 
-            cParticle.Velocity = new Vector3(RandomNumber.Next(-15, 15), RandomNumber.Next(-15, 15), RandomNumber.Next(-15, 15));
+            cParticle.Velocity = new Vector3(RandomNumber.Next(-30, 30), RandomNumber.Next(0, 10), RandomNumber.Next(-30, 30));
             cParticle.Acceleration = Vector3.Zero;
             cParticle.RotationalVelocity = RandomNumber.Between(-MathHelper.Pi, MathHelper.Pi);
 
@@ -107,7 +106,7 @@ namespace DPSF.ParticleSystems
 
         protected void UpdateColor(DefaultSprite3DBillboardParticle cParticle, float fElapsedTimeInSeconds)
         {
-            cParticle.Color = msaColors[miCurrentColor];
+            cParticle.Color = particleColor;
         }
 
         protected void RepelParticleFromExternalObject(DefaultSprite3DBillboardParticle cParticle, float fElapsedTimeInSeconds)
@@ -148,16 +147,9 @@ namespace DPSF.ParticleSystems
         //===========================================================
         // Other Particle System Functions
         //===========================================================
-        public void ChangeColor(bool isIce)
+        public void ChangeColor(Color particleColor)
         {
-            if (isIce)
-            {
-                miCurrentColor = 8;
-            }
-            else
-            {
-                miCurrentColor = 5;
-            }
+            this.particleColor = particleColor;
         }
 
         public void MakeParticlesAttractToExternalObject()

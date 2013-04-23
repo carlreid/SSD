@@ -91,7 +91,9 @@
   <ItemGroup>
     <Compile Include="Draw\Bloom\BloomComponent.cs" />
     <Compile Include="Draw\Bloom\BloomSettings.cs" />
+    <Compile Include="Draw\BmFont.cs" />
     <Compile Include="Draw\BoundingSphereRenderer.cs" />
+    <Compile Include="Draw\FontRenderer.cs" />
     <Compile Include="Draw\ScoreText.cs" />
     <Compile Include="Entity\Bullet\Bullet.cs" />
     <Compile Include="Camera.cs" />
@@ -99,6 +101,15 @@
     <Compile Include="Entity\Enemy\EnemyMine.cs" />
     <Compile Include="Entity\Enemy\EnemyRock.cs" />
     <Compile Include="Entity\Bullet\FireBullet.cs" />
+    <Compile Include="Entity\PowerUps\BulletSpeedPU.cs" />
+    <Compile Include="Entity\PowerUps\LifePU.cs" />
+    <Compile Include="Entity\PowerUps\MultiplierPU.cs" />
+    <Compile Include="Entity\PowerUps\BombPU.cs" />
+    <Compile Include="Entity\PowerUps\SlowDownPU.cs" />
+    <Compile Include="Entity\PowerUps\PowerUp.cs" />
+    <Compile Include="Entity\PowerUps\SpeedUpPU.cs" />
+    <Compile Include="Levels\GameLevel.cs" />
+    <Compile Include="Levels\LaveLevel.cs" />
     <Compile Include="Managers\FPSManager.cs" />
     <Compile Include="Entity\Bullet\IceBullet.cs" />
     <Compile Include="Particle Systems\BoostPS.cs" />
@@ -114,6 +125,7 @@
     <Compile Include="Draw\Draw.cs" />
     <Compile Include="Entity\Entity.cs" />
     <Compile Include="Entity\ModelContainer.cs" />
+    <Compile Include="Particle Systems\PowerUpPS.cs" />
     <Compile Include="Particle Systems\QuadSprayPS.cs" />
     <Compile Include="Particle Systems\ShipBombPS.cs" />
     <Compile Include="Particle Systems\ShipExplodePS.cs" />

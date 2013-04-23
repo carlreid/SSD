@@ -13,6 +13,29 @@ namespace SSD
             : base(position, model, true, scale, yaw, pitch, roll)
         {
             _planetTarget = planetSphere;
+            
+
+            //delta = object2 - object1;
+            //delta.noramlise;
+
+            //then find out the right vector
+            //right = vector(-delta.z, 0, delta.x);
+            //right.normalise;
+
+            //then to find the up vector just find the angle between delta and right using the crossproduct.
+            //up = delta.crossproject(right);
+            //up.normalise;
+
+            Vector3 directionVector = this.getMatrix().Translation - planetSphere.getMatrix().Translation;
+            directionVector.Normalize();
+
+            Vector3 right = new Vector3(-directionVector.X, 0, directionVector.X);
+            right.Normalize();
+
+            Vector3 up = Vector3.Cross(directionVector, right);
+            up.Normalize();
+
+
 
             _bulletShootSpeed = 2000;
             _lastBulletShot = _bulletShootSpeed;
@@ -31,7 +54,7 @@ namespace SSD
             transform *= Matrix.CreateScale(base.getScale());
             transform *= Matrix.CreateFromQuaternion(Quaternion.CreateFromYawPitchRoll(this.getYaw(), this.getPitch(), this.getRoll()));
             transform *= Matrix.CreateTranslation(base.getPosition());
-            transform *= Matrix.CreateFromQuaternion(this.getRawRotation());
+            //transform *= Matrix.CreateFromQuaternion(this.getRawRotation());
             //transform *= Matrix.CreateFromQuaternion(Quaternion.CreateFromAxisAngle(base.getMatrix().Forward, MathHelper.ToRadians(0.1f)));
 
             //setPosition(transform.Translation);
@@ -50,6 +73,8 @@ namespace SSD
             }
 
             _lastBulletShot -= deltaTime.Milliseconds;
+
+            //base.setPosition(base.getPosition() + base.getMatrix().Forward);
 
             base.update(deltaTime);
         }
@@ -93,6 +118,24 @@ namespace SSD
         public void didShoot()
         {
             _lastBulletShot = _bulletShootSpeed;
+        }
+
+        public Quaternion getOrientationToPlanet()
+        {
+            Matrix rotationMat = Matrix.Identity;
+            Matrix currentPosition = getMatrix();
+            rotationMat.Down = currentPosition.Translation - _planetTarget.getMatrix().Translation;
+            rotationMat.Down.Normalize();
+            //rotationMat.Up = -rotationMat.Down;
+            rotationMat.Right = Vector3.Cross(currentPosition.Forward, rotationMat.Up);
+            rotationMat.Right.Normalize();
+            //rotationMat.Left = -rotationMat.Right;
+            rotationMat.Forward = Vector3.Cross(rotationMat.Left, rotationMat.Up);
+            //rotationMat.Backward = -rotationMat.Forward;
+
+            return Quaternion.CreateFromRotationMatrix(rotationMat);
+
+           // return Quaternion.CreateFromRotationMatrix//
         }
 
         Entity _planetTarget;

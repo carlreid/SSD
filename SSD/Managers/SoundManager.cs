@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Media;
 
 namespace SSD
 {
-    public enum LoadedSounds { FIRE_ACTIVATED, ICE_ACTIVATED, ICE_BULLET_FIRED, FIRE_BULLET_FIRED, ICE_BULLET_DESTROY, FIRE_BULLET_DESTROY,
+    public enum LoadedSounds { FIRE_ACTIVATED, ICE_ACTIVATED, ICE_BULLET_FIRED, FIRE_BULLET_FIRED, ICE_BULLET_DESTROY, FIRE_BULLET_DESTROY, WARNING_ALERT,
                                ROCK_ENEMY_MOVE, MINE_ENEMY_MOVE, ROCK_ENEMY_DESTROY, MINE_ENEMY_DESTROY,
                                SHIP_BOOST, SHIP_ENGINE_DRONE, SHIP_DEATH, SHIP_BOMB};
     class SoundManager
@@ -15,6 +15,8 @@ namespace SSD
         {
             _contentManager = contentManager;
             _soundAttatchments = new List<SoundAttacher>();
+            _warningSoundCooldown = false;
+            _warningCooldownTimeRemaining = 0;
             //_soundEffects = new List<SoundEffect>();
 
             //_soundEffects.Add(_contentManager.Load<SoundEffect>("missile_sound"));
@@ -32,11 +34,11 @@ namespace SSD
             _entitySoundBank = new SoundBank(_audioEngine, "Content/EntitySoundBank.xsb");
 
             _mainMusic = contentManager.Load<Song>("Music/game_music");
-            MediaPlayer.Volume = 0.05f;
+            MediaPlayer.Volume = 0.2f;
             //MediaPlayer.Play(_mainMusic);
         }
 
-        public void addAttatchment(LoadedSounds soundEnum, Entity entityToAttachTo)
+        public void addAttatchment(LoadedSounds soundEnum, Entity entityToAttachTo, int? timeToPlay = null)
         {
             if (soundEnum == LoadedSounds.FIRE_ACTIVATED)
             {
@@ -90,13 +92,22 @@ namespace SSD
             {
                 _soundAttatchments.Add(new SoundAttacher(_entitySoundBank.GetCue("ShipBomb")));
             }
-
             
         }
 
-        public void update()
+        public void update(GameTime gameTime)
         {
             _audioEngine.Update();
+
+            if (_warningCooldownTimeRemaining >= 0)
+            {
+                _warningCooldownTimeRemaining -= gameTime.ElapsedGameTime.Milliseconds;
+            }
+            else
+            {
+                _warningSoundCooldown = false;
+            }
+
 
             //Update the listner position to be that of the player
             float backupYaw = _player.getYaw();
@@ -116,7 +127,7 @@ namespace SSD
 
             //Run update on all the sounds
             foreach(SoundAttacher attatchedSound in _soundAttatchments){
-                attatchedSound.update();
+                attatchedSound.update(gameTime);
             }
         }
 
@@ -145,6 +156,20 @@ namespace SSD
 
         }
 
+        public void playWarningSound(int? howLong = null)
+        {
+            if (howLong.HasValue && !_warningSoundCooldown)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_announcerSoundBank.GetCue("AlarmAlert"), (int)howLong));
+                _warningSoundCooldown = true;
+                _warningCooldownTimeRemaining = (int)howLong;
+            }
+            else if(!_warningSoundCooldown)
+            {
+                _soundAttatchments.Add(new SoundAttacher(_announcerSoundBank.GetCue("AlarmAlert")));
+            }
+        }
+
         AudioEngine _audioEngine;
    
         WaveBank _bulletWaveBank;
@@ -160,5 +185,8 @@ namespace SSD
         AudioListener _listner;
         PlayerEntity _player;
         Song _mainMusic;
+
+        bool _warningSoundCooldown;
+        int _warningCooldownTimeRemaining;
     }
 }

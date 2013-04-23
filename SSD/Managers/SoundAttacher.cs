@@ -13,6 +13,7 @@ namespace SSD
             _emitter.Position = entityToAttachTo.getMatrix().Translation;
             _isPlaying = true;
             _isLoop = isLoop;
+            _timeRemaining = null;
 
             _myCue = soundCue;
             _myCue.Apply3D(_listner, _emitter);
@@ -33,8 +34,31 @@ namespace SSD
             _myCue.Play();
         }
 
-        public void update()
+        public SoundAttacher(Cue soundCue, int timeInMilis)
         {
+            _emitter = new AudioEmitter();
+            _listner = null;
+            _isPlaying = true;
+            _timeRemaining = timeInMilis;
+
+            _myCue = soundCue;
+
+            _entityAttachedTo = null;
+            _myCue.Play();
+        }
+
+        public void update(GameTime gameTime)
+        {
+            if (_timeRemaining != null)
+            {
+                _timeRemaining -= gameTime.ElapsedGameTime.Milliseconds;
+                if (_timeRemaining <= 0)
+                {
+                    _isPlaying = false;
+                    _myCue.Stop(AudioStopOptions.Immediate);
+                }
+            }
+
             //If the sound has stopped, dispose of the sound
             if (!_myCue.IsPlaying)
             {
@@ -71,5 +95,6 @@ namespace SSD
         Entity _entityAttachedTo;
         bool _isPlaying;
         bool _isLoop;
+        int? _timeRemaining;
     }
 }

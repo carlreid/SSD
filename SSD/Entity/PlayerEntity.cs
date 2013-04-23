@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace SSD
 {
@@ -10,7 +11,7 @@ namespace SSD
             : base(position, model, scale, yaw, pitch, roll)
         {
             _lives = 3;
-            _bombs = 30;
+            _bombs = 3;
             _boosts = 0;
             _lastBoostApplied = 0; //20 Seconds
             _boostReplenishTime = 20000;
@@ -20,6 +21,10 @@ namespace SSD
             _isInDeathCooldown = false;
             _isIceElement = true;
             _currentColour = Color.Cyan;
+            _myPowerUps = new List<PowerUp>();
+            _affectOnGameTime = 1.0f;
+            _bulletSootingSpeed = 1.0f;
+            _scoreMultiplier = 1.0f;
         }
 
         public override void update(TimeSpan deltaTime)
@@ -39,6 +44,78 @@ namespace SSD
                     return;
                 }
             }
+
+            //Update all the power up times
+            _myPowerUps.ForEach(delegate(PowerUp powerUp)
+            {
+                powerUp.update(deltaTime);
+                if (!powerUp.hasBeenApplied())
+                {
+                    if (powerUp is SpeedUpPU)
+                    {
+                        _shipSpeed += powerUp.getIncreaseBy();
+                        powerUp.setUsed();
+                    }
+                    else if (powerUp is SlowDownPU)
+                    {
+                        _affectOnGameTime += powerUp.getIncreaseBy();
+                        powerUp.setUsed();
+
+                        if (_affectOnGameTime <= 0)
+                        {
+                            _affectOnGameTime = 0;
+                        }
+                    }
+                    else if (powerUp is BulletSpeedPU)
+                    {
+                        _bulletSootingSpeed += powerUp.getIncreaseBy();
+                        powerUp.setUsed();
+                    }
+                    else if (powerUp is LifePU)
+                    {
+                        _lives += 1;
+                        powerUp.setUsed();
+                        _myPowerUps.Remove(powerUp);
+                    }
+                    else if (powerUp is BombPU)
+                    {
+                        _bombs += 1;
+                        powerUp.setUsed();
+                        _myPowerUps.Remove(powerUp);
+                    }
+                    else if (powerUp is MultiplierPU)
+                    {
+                        _scoreMultiplier += powerUp.getIncreaseBy();
+                        powerUp.setUsed();
+                        _myPowerUps.Remove(powerUp);
+                    }
+                }
+            });
+
+            //Check if a power up needs deleteing
+            _myPowerUps.RemoveAll(delegate(PowerUp powerUp){
+                if (powerUp.getTimeTillRunOut() < 0)
+                {
+                    if (powerUp is SpeedUpPU)
+                    {
+                        _shipSpeed -= powerUp.getIncreaseBy();
+                    }
+                    else if (powerUp is SlowDownPU)
+                    {
+                        _affectOnGameTime -= powerUp.getIncreaseBy();
+                        if (_affectOnGameTime >= 1)
+                        {
+                            _affectOnGameTime = 1;
+                        }
+                    }
+                    else if (powerUp is BulletSpeedPU)
+                    {
+                        _bulletSootingSpeed -= powerUp.getIncreaseBy();
+                    }
+                    return true;
+                }
+                return false;
+            });
 
             //Add boost to player (based on time, maybe apply to score?)
             if (_boosts < 1)
@@ -190,6 +267,36 @@ namespace SSD
             _isInDeathCooldown = inDeathCooldown;
         }
 
+        public void addPowerUp(PowerUp powerUp)
+        {
+            _myPowerUps.Add(powerUp);
+        }
+
+        public void setAffectOnTime(float affect)
+        {
+            _affectOnGameTime = affect;
+        }
+
+        public float getAffectOnTime()
+        {
+            return _affectOnGameTime;
+        }
+
+        public void setShootingSpeed(float speed)
+        {
+            _bulletSootingSpeed = speed;
+        }
+
+        public float getShootingSpeed()
+        {
+            return _bulletSootingSpeed;
+        }
+
+        public float getScoreMultiplier()
+        {
+            return _scoreMultiplier;
+        }
+
         float _shipSpeed;
         float _deathCooldownTimer;
         int _lives;
@@ -202,6 +309,11 @@ namespace SSD
         bool _isInDeathCooldown;
         bool _isIceElement;
         Color _currentColour;
+
+        List<PowerUp> _myPowerUps;
+        float _affectOnGameTime;
+        float _bulletSootingSpeed;
+        float _scoreMultiplier;
 
     }
 }
