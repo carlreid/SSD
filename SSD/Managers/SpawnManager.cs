@@ -134,7 +134,7 @@ namespace SSD
             _worldEntities.Add(new EnemyIceBoss((Matrix.CreateTranslation(0, _randomGen.Next(600, 1000), 0) * Matrix.CreateRotationX(MathHelper.ToRadians(_randomGen.Next(0, 360)))
                                                        * Matrix.CreateRotationY(MathHelper.ToRadians(_randomGen.Next(0, 360)))
                                                        * Matrix.CreateRotationZ(MathHelper.ToRadians(_randomGen.Next(0, 360)))).Translation,
-                                                       _renderer.getModel("e_iceBossHead"), targetPlanet, player, _randomGen, 1f));
+                                                       _renderer.getModel("e_iceBossHead"), _renderer.getModel("e_iceBossTail"), targetPlanet, player, _randomGen, 1f));
         }
 
         List<Entity> _worldEntities;

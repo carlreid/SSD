@@ -307,6 +307,21 @@
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>
+    <Compile Include="GUI\health_shield_background.png">
+      <Name>health_shield_background</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="GUI\health_shield_bar.png">
+      <Name>health_shield_bar</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+    <Compile Include="GUI\health_shield_frame.png">
+      <Name>health_shield_frame</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
     <Content Include="GUI\ui_font.fnt">
       <Name>ui_font</Name>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

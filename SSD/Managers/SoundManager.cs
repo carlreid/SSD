@@ -174,7 +174,7 @@ namespace SSD
 
         public void playMusic()
         {
-            //MediaPlayer.Play(_mainMusic);
+            MediaPlayer.Play(_mainMusic);
             _mainMusicStopped = false;
         }
 

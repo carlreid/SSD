@@ -9,8 +9,8 @@ namespace SSD
             base(spawnManager, randomGen, difficultyManager)
         {
             //base._levelTime = TimeSpan.FromSeconds(532);
-            base._levelTime = TimeSpan.FromSeconds(320);
-            _currentPhase = 16;
+            //base._levelTime = TimeSpan.FromSeconds(320);
+            //_currentPhase = 16;
             _planetModel = "worldSphere";
         }
 
@@ -292,6 +292,11 @@ namespace SSD
                     _spawnManager.spawnIceBoss(1, targetPlanet, player);
                     ++_currentPhase;
                 }
+            }
+            else if (_currentPhase == 17)
+            {
+                _isEndGame = true;
+                ++_currentPhase;
             }
 
         }

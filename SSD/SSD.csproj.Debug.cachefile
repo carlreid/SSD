@@ -61,6 +61,9 @@ Content\GUI\menuBackground.xnb
 Content\Models\e_iceBossHead.xnb
 Content\Models\e_iceBossTail.xnb
 Content\Models\enemyIceBossTexture_0.xnb
+Content\GUI\health_shield_background.xnb
+Content\GUI\health_shield_bar.xnb
+Content\GUI\health_shield_frame.xnb
 Content\Music\game_music.wma
 Content\XACTProject.xgs
 Content\BulletWaveBank.xwb

@@ -16,6 +16,7 @@ namespace SSD
             _warningColour = Color.Red;
             _colorGoingDown = true;
             _difficultyManager = difficultyManager;
+            _isEndGame = false;
         }
 
         public virtual void update(GameTime gameTime, Entity targetPlanet, PlayerEntity player)
@@ -61,6 +62,11 @@ namespace SSD
             return _planetModel;
         }
 
+        public bool isEndGame()
+        {
+            return _isEndGame;
+        }
+
         protected TimeSpan _levelTime;
         protected SpawnManager _spawnManager;
         protected int _currentPhase;
@@ -72,5 +78,6 @@ namespace SSD
         private bool _colorGoingDown;
         protected string _planetModel;
         protected DifficultyManager _difficultyManager;
+        protected bool _isEndGame;
     }
 }

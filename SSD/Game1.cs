@@ -30,6 +30,10 @@ namespace SSD
         FontRenderer _fontRenderer;
         Texture2D _menuBackground;
 
+        Texture2D _healthShieldBackground;
+        Texture2D _healthShieldBar;
+        Texture2D _healthShieldFrame;
+
         SoundManager _soundManager;
         FPSManager _fpsManager = new FPSManager();
         SpawnManager _spawnManager;
@@ -169,7 +173,10 @@ namespace SSD
                             //Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
                             if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
                             {
-                                entity.setAlive(false);
+                                if (!(entity is EnemyIceBoss))
+                                {
+                                    entity.setAlive(false);
+                                }
                             }
                         }
                     });
@@ -318,6 +325,10 @@ namespace SSD
             _fontTexture = Content.Load<Texture2D>("GUI/ui_font_0");
             _fontRenderer = new FontRenderer(_fontFile, _fontTexture);
 
+            _healthShieldBackground = Content.Load<Texture2D>("GUI/health_shield_background");
+            _healthShieldBar = Content.Load<Texture2D>("GUI/health_shield_bar");
+            _healthShieldFrame = Content.Load<Texture2D>("GUI/health_shield_frame");
+
             BoundingSphereRenderer.InitializeGraphics(GraphicsDevice, 30);
 
             //Load particles
@@ -423,6 +434,26 @@ namespace SSD
                 return;
             }
 
+            //Check for win
+            if (_currentLevel.isEndGame())
+            {
+                bool gameOver = true;
+                _worldEntities.ForEach(delegate(Entity e)
+                {
+                    if (e is EnemyEntity && gameOver)
+                    {
+                        gameOver = false;
+                    }
+                });
+
+                if (gameOver)
+                {
+                    _currentMenu = new WinMenu(this, _currentMenu, graphics.GraphicsDevice.Viewport);
+                    _isInMenus = true;
+                    //restartGame(1);
+                }
+            }
+
             if (_soundManager.isStopped())
             {
                 _soundManager.playMusic();
@@ -475,7 +506,14 @@ namespace SSD
                                 //Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
                                 if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
                                 {
-                                    entity.setAlive(false);
+                                    if (!(entity is EnemyIceBoss/* || entity is EnemyIceBit*/))
+                                    {
+                                        entity.setAlive(false);
+                                    }
+                                    else
+                                    {
+                                        ((EnemyEntity)entity).doDamage(1000); 
+                                    }
                                 }
                             }
                         });
@@ -728,17 +766,20 @@ namespace SSD
                                     //Debug.WriteLine("Collision");
 
                                     //Check for ship collision. If there is one, mark both dead.
-                                    if ((currentEntity is PlayerEntity && checkEntity is EnemyEntity) ||
-                                        (checkEntity is PlayerEntity && currentEntity is EnemyEntity))
+                                    if ((currentEntity is PlayerEntity && checkEntity is EnemyEntity && !(_worldEntities[entity] is EnemyIceBoss)) ||
+                                        (checkEntity is PlayerEntity && currentEntity is EnemyEntity && !(_worldEntities[entity] is EnemyIceBoss)))
                                     {
                                         //If the player is boosting, they shouldn't die. So only kill enemy
                                         if (currentEntity is PlayerEntity)
                                         {
                                             if (((PlayerEntity)currentEntity).isBoosting())
                                             {
-                                                checkEntity.setAlive(false);
-                                                checkEntity.doDamage(currentEntity.getHealth());
-                                                continue;
+                                                if (!(checkEntity is EnemyIceBoss))
+                                                {
+                                                    checkEntity.setAlive(false);
+                                                    checkEntity.doDamage(currentEntity.getHealth());
+                                                    continue;
+                                                }
                                             }
                                         }
                                         else if (checkEntity is PlayerEntity)
@@ -919,6 +960,19 @@ namespace SSD
                     }
 
                 }
+                else if (_worldEntities[entity] is EnemyIceBoss)
+                {
+                    foreach (EnemyIceBit iceBit in ((EnemyIceBoss)_worldEntities[entity]).getMyBits())
+                    {
+                        if (iceBit.getBoundingSphere().Intersects(_playerOne.getBoundingSphere()))
+                        {
+                            if (!_playerOne.getInDeathCooldown())
+                            {
+                                _playerOne.doDamage(_playerOne.getHealth());
+                            }
+                        }
+                    }
+                }
                 else
                 {
                     continue;
@@ -930,7 +984,7 @@ namespace SSD
             #endregion
 
 
-            //If player is bossting, modify the trail to emite a blue boost
+            //If player is bossting, modify the trail to emit a blue boost
             if (_playerOne.isBoosting())
             {
                 if (_playerOne.isIceElement())
@@ -961,7 +1015,10 @@ namespace SSD
 
             _soundManager.update(gameTime);
             _fpsManager.update(gameTime);
-            _spawnManager.update(gameTime, _planet, _playerOne);
+            if (!_currentLevel.isEndGame())
+            {
+                _spawnManager.update(gameTime, _planet, _playerOne);
+            }
             _currentLevel.update(gameTime, _planet, _playerOne);
             _renderer.update(gameTime);
 
@@ -1109,6 +1166,26 @@ namespace SSD
             _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width - 25, 20), formatNumericToString(_currentScore), 0.8f, Color.Red, true);
             _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width - 25, 80), _playerOne.getScoreMultiplier().ToString("0.0") + "x", 0.3f, Color.White, true);
 
+
+            //Draw Boss health if one is up
+            _worldEntities.ForEach(delegate(Entity entity)
+            {
+                if (entity is EnemyIceBoss)
+                {
+                    EnemyIceBoss curEntity = (EnemyIceBoss)entity;
+                    //_fontRenderer.DrawText(spriteBatch, new Vector2(400, 100), curEntity.getHealth().ToString());
+
+                    Vector2 destination = new Vector2(110, 150);
+
+                    //Draw Background
+                    spriteBatch.Draw(_healthShieldBackground, new Vector2(destination.X - _healthShieldBackground.Width / 2, destination.Y), Color.White);
+
+                    Rectangle healthRectangleCrop = new Rectangle(0, 0, (int)(_healthShieldBar.Width * ((float)curEntity.getHealth() / (float)curEntity.getInitialHealth())), _healthShieldBar.Height);
+                    spriteBatch.Draw(_healthShieldBar, new Vector2(destination.X - _healthShieldBar.Width / 2, destination.Y), healthRectangleCrop, Color.White);
+                    spriteBatch.Draw(_healthShieldFrame, new Vector2(destination.X - _healthShieldFrame.Width / 2, destination.Y), Color.White);
+                }
+            });
+
             spriteBatch.End();
 
             if (_isInMenus)
@@ -1134,6 +1211,17 @@ namespace SSD
                         _fontRenderer.DrawText(spriteBatch, new Vector2(_currentMenu.getOffset().X - (textWidth / 2), _currentMenu.getOffset().Y + (40 * curItem)), _currentMenu.getMenuItems()[curItem], 0.5f, Color.LightBlue);
                     }
                 }
+
+
+                if (_currentMenu is WinMenu)
+                {
+                    int youWinWidth = _fontRenderer.TextWidth("You Win!");
+                    _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width / 2 - youWinWidth / 2, viewport.Height - 300), "You Win!", 1, Color.Green);
+                    int finalScoreWidth = _fontRenderer.TextWidth("Final Score: " + formatNumericToString(_currentScore));
+                    _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width / 2 - finalScoreWidth / 2, viewport.Height - 200), "Final Score: " + formatNumericToString(_currentScore), 1, Color.Green);
+                }
+
+
                 spriteBatch.End();
             }
         }
