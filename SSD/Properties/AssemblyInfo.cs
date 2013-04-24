@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SSD")]
-[assembly: AssemblyProduct("SSD")]
+[assembly: AssemblyTitle("Cosmic Dust")]
+[assembly: AssemblyProduct("Cosmic Dust")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]

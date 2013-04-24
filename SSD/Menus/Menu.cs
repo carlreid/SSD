@@ -38,7 +38,8 @@ namespace SSD
             {
                 handleSelected(_menuItems[_selectedItem], ref  currentDisplay, ref inMenu);
             }
-            else if (gamePadState.Buttons.B == ButtonState.Pressed && lastGamePadState.Buttons.B == ButtonState.Released)
+            else if (gamePadState.Buttons.B == ButtonState.Pressed && lastGamePadState.Buttons.B == ButtonState.Released
+                || keyboardState.IsKeyDown(Keys.Escape) && lastKeyboardState.IsKeyUp(Keys.Escape))
             {
                 handleBack(_menuItems[_selectedItem], ref  currentDisplay, ref inMenu);
             }

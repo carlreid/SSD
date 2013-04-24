@@ -286,7 +286,7 @@ namespace SSD
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            Window.Title = "Super Stardust Clone";
+            Window.Title = "Cosmic Dust";
             this.IsMouseVisible = true;
             //graphics = new GraphicsDeviceManager(this);
 
@@ -475,7 +475,7 @@ namespace SSD
 
             #region Controls
 
-            if (curGamepadState.Buttons.Start == ButtonState.Pressed)
+            if (curGamepadState.Buttons.Start == ButtonState.Pressed || curKeyboardState.IsKeyDown(Keys.Escape) && _keyboardState.IsKeyUp(Keys.Escape))
             {
                 _isInMenus = true;
                 if (!(_currentMenu is PauseMenu))
@@ -484,6 +484,7 @@ namespace SSD
                 }
                 _soundManager.pauseMusic();
                 _soundManager.pauseEffects();
+                _keyboardState = curKeyboardState;
                 return;
             }
 
