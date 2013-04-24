@@ -302,10 +302,20 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GUI\menuBackground.png">
+      <Name>menuBackground</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
     <Content Include="GUI\ui_font.fnt">
       <Name>ui_font</Name>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Compile Include="Textures\Star2.png">
+      <Name>Star2</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GUI\ui_font_0.png">
@@ -355,6 +365,25 @@
   <ItemGroup>
     <Compile Include="Models\pu_multiplier.FBX">
       <Name>pu_multiplier</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Models\e_pushPull.FBX">
+      <Name>e_pushPull</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Models\e_iceBossHead.FBX">
+      <Name>e_iceBossHead</Name>
+      <Importer>FbxImporter</Importer>
+      <Processor>ModelProcessor</Processor>
+    </Compile>
+    <Compile Include="Models\e_iceBossTail.FBX">
+      <Name>e_iceBossTail</Name>
       <Importer>FbxImporter</Importer>
       <Processor>ModelProcessor</Processor>
     </Compile>

@@ -98,7 +98,7 @@ namespace DPSF.ParticleSystems
             Emitter.EmitParticlesAutomatically = false; // We will call the Explode() function to release a burst of particles instead of always emitting them
 
             // Set the default explosion settings
-            ExplosionColor = new Color(255, 120, 0);
+            ExplosionColor = Color.Cyan;
             ExplosionParticleSize = 10;
             ExplosionIntensity = 20;
         }

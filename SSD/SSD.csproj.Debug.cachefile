@@ -54,6 +54,13 @@ Content\space_frigate_6\space_frigate_6_color_0.xnb
 Content\Models\asteroidTexture_0.xnb
 Content\Models\mineTexture_0.xnb
 Content\Models\IceBulletTexture_0.xnb
+Content\Textures\Star2.xnb
+Content\Models\e_pushPull.xnb
+Content\Models\enemyPushPullTexture_0.xnb
+Content\GUI\menuBackground.xnb
+Content\Models\e_iceBossHead.xnb
+Content\Models\e_iceBossTail.xnb
+Content\Models\enemyIceBossTexture_0.xnb
 Content\Music\game_music.wma
 Content\XACTProject.xgs
 Content\BulletWaveBank.xwb

@@ -49,6 +49,11 @@ namespace SSD
 
         public void update(GameTime gameTime)
         {
+            if (_myCue.IsPaused)
+            {
+                return;
+            }
+
             if (_timeRemaining != null)
             {
                 _timeRemaining -= gameTime.ElapsedGameTime.Milliseconds;
@@ -85,6 +90,29 @@ namespace SSD
         public bool isPlaying()
         {
             return _isPlaying;
+        }
+
+        public void forceStop()
+        {
+            _isPlaying = false;
+            _myCue.Stop(AudioStopOptions.Immediate);
+            _myCue.Dispose();
+        }
+
+        public void pause()
+        {
+            if (!_myCue.IsDisposed && !_myCue.IsStopped)
+            {
+                _myCue.Pause();
+            }
+        }
+
+        public void resume()
+        {
+            if (!_myCue.IsDisposed && !_myCue.IsStopped)
+            {
+                _myCue.Resume();
+            }
         }
 
         Cue _myCue;

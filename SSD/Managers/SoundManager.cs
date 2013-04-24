@@ -34,8 +34,10 @@ namespace SSD
             _entitySoundBank = new SoundBank(_audioEngine, "Content/EntitySoundBank.xsb");
 
             _mainMusic = contentManager.Load<Song>("Music/game_music");
-            MediaPlayer.Volume = 0.2f;
-            //MediaPlayer.Play(_mainMusic);
+            MediaPlayer.Volume = 0.1f;
+            _mainMusicPaused = false;
+            _mainMusicStopped = true;
+            _effectsPaused = false;
         }
 
         public void addAttatchment(LoadedSounds soundEnum, Entity entityToAttachTo, int? timeToPlay = null)
@@ -170,6 +172,75 @@ namespace SSD
             }
         }
 
+        public void playMusic()
+        {
+            //MediaPlayer.Play(_mainMusic);
+            _mainMusicStopped = false;
+        }
+
+        public void stopMusic()
+        {
+            MediaPlayer.Stop();
+            _mainMusicStopped = true;
+        }
+
+        public bool isPaused()
+        {
+            return _mainMusicPaused;
+        }
+
+        public bool isStopped()
+        {
+            return _mainMusicStopped;
+        }
+
+        public void resumeMusic()
+        {
+            MediaPlayer.Resume();
+            _mainMusicPaused = false;
+        }
+
+        public void pauseMusic()
+        {
+            MediaPlayer.Pause();
+            _mainMusicPaused = true;
+        }
+
+        public void reset(PlayerEntity player)
+        {
+            _soundAttatchments.ForEach(delegate(SoundAttacher attatcher)
+            {
+                attatcher.forceStop();
+                _soundAttatchments.Remove(attatcher);
+            });
+            _soundAttatchments.Clear();
+
+            _player = player;
+        }
+
+        public void pauseEffects()
+        {
+            _soundAttatchments.ForEach(delegate(SoundAttacher attatcher)
+            {
+                attatcher.pause();
+            });
+            _effectsPaused = true;
+        }
+
+        public void resumeEffects()
+        {
+            _soundAttatchments.ForEach(delegate(SoundAttacher attatcher)
+            {
+                attatcher.resume();
+            });
+            _effectsPaused = false;
+        }
+
+        public bool areEffectsPaused()
+        {
+            return _effectsPaused;
+        }
+
         AudioEngine _audioEngine;
    
         WaveBank _bulletWaveBank;
@@ -185,6 +256,9 @@ namespace SSD
         AudioListener _listner;
         PlayerEntity _player;
         Song _mainMusic;
+        bool _mainMusicPaused;
+        bool _mainMusicStopped;
+        bool _effectsPaused;
 
         bool _warningSoundCooldown;
         int _warningCooldownTimeRemaining;

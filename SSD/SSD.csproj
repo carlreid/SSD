@@ -97,6 +97,8 @@
     <Compile Include="Draw\ScoreText.cs" />
     <Compile Include="Entity\Bullet\Bullet.cs" />
     <Compile Include="Camera.cs" />
+    <Compile Include="Entity\Enemy\EnemyIceBoss.cs" />
+    <Compile Include="Entity\Enemy\EnemyPushPull.cs" />
     <Compile Include="Entity\Enemy\EnemyTurret.cs" />
     <Compile Include="Entity\Enemy\EnemyMine.cs" />
     <Compile Include="Entity\Enemy\EnemyRock.cs" />
@@ -110,8 +112,15 @@
     <Compile Include="Entity\PowerUps\SpeedUpPU.cs" />
     <Compile Include="Levels\GameLevel.cs" />
     <Compile Include="Levels\LaveLevel.cs" />
+    <Compile Include="Managers\DifficultyManager.cs" />
     <Compile Include="Managers\FPSManager.cs" />
     <Compile Include="Entity\Bullet\IceBullet.cs" />
+    <Compile Include="Menus\GameOverMenu.cs" />
+    <Compile Include="Menus\OptionsMenu.cs" />
+    <Compile Include="Menus\PauseMenu.cs" />
+    <Compile Include="Menus\MainMenu.cs" />
+    <Compile Include="Menus\Menu.cs" />
+    <Compile Include="Particle Systems\PushPullPS.cs" />
     <Compile Include="Particle Systems\BoostPS.cs" />
     <Compile Include="Particle Systems\BoostGlowPS.cs" />
     <Compile Include="Particle Systems\ExplosionMinePS.cs" />

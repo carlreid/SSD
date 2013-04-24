@@ -34,7 +34,7 @@ namespace SSD
                         effect.DiffuseColor = _powerUpColour.ToVector3();
                         effect.EmissiveColor = _powerUpColour.ToVector3();
                     }
-                    BoundingSphereRenderer.Render(getBoundingSphere(), graphicsDevice, view, proj, Color.Red);
+                    //BoundingSphereRenderer.Render(getBoundingSphere(), graphicsDevice, view, proj, Color.Red);
                     mesh.Draw();
                 }
             }

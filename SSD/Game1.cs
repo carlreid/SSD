@@ -28,12 +28,14 @@ namespace SSD
         FontFile _fontFile;
         Texture2D _fontTexture;
         FontRenderer _fontRenderer;
+        Texture2D _menuBackground;
 
         SoundManager _soundManager;
         FPSManager _fpsManager = new FPSManager();
         SpawnManager _spawnManager;
         BloomComponent bloom;
         GameLevel _currentLevel;
+        DifficultyManager _difficultyManager = new DifficultyManager();
 
         const float BLAST_RADIUS = 250.0f;
         float aspectRatio;
@@ -54,6 +56,9 @@ namespace SSD
         int drawCount = 0;
         int updateCount = 0;
 
+        bool _isInMenus = true;
+        Menu _currentMenu;
+
         //Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
         //List<Bullet> _bullets = new List<Bullet>();
 
@@ -69,11 +74,14 @@ namespace SSD
         ExplosionMineParticleSystem _mineExplodeParticles = null;
         ShipExplodeParticleSystem _shipExplodeParticles = null;
         ShipBombExplodeParticleSystem _shipBombExplodeParticles = null;
-        PowerUpParticleSystem _powerUpParticles = null;
+        //PowerUpParticleSystem _powerUpParticles = null;
+        PushPullParticleSystem _pushPullParticles = null;
 
         //Input States to keep backup
         //KeyboardState l;
         GamePadState _controllerState;
+        KeyboardState _keyboardState;
+        MouseState _mouseState;
 
 
         Texture2D _boostOverlay = null;
@@ -89,6 +97,38 @@ namespace SSD
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+        }
+
+        public void restartGame(int levelToLoad)
+        {
+            switch(levelToLoad){
+                case 1:
+                    _currentLevel = new LaveLevel(_spawnManager, _randomGen, _difficultyManager);
+                    break;
+                default:
+                    break;
+            }
+
+            _worldEntities.Clear();
+            _worldEntities.Add(new PlayerEntity(new Vector3(0, 400f, 0), _renderer.getModel("playerShip"), 1f, 90));
+            _playerOne = (PlayerEntity)_worldEntities[_worldEntities.Count - 1];
+
+            _worldEntities.Add(new Planet(Vector3.Zero, _renderer.getModel(_currentLevel.getPlanetModelString()), 8f, 0, 90));
+            _planet = _worldEntities[_worldEntities.Count - 1];
+
+            _worldEntities.Add(new Skybox(Vector3.Zero, _renderer.getModel("spaceSphere"), 100f));
+            _universe = _worldEntities[_worldEntities.Count - 1];
+
+            _worldEntities.Add(new PlaySphere(Vector3.Zero, _renderer.getModel("playSphere"), 15f));
+            _playSphere = _worldEntities[_worldEntities.Count - 1];
+
+            _soundManager.stopMusic();
+            _soundManager.reset(_playerOne);
+            loadParticleSystems();
+
+            camUp = Vector3.Left;
+            _currentScore = 0;
 
         }
 
@@ -112,6 +152,10 @@ namespace SSD
                     if (_playerOne.getLives() < 0)
                     {
                         _playerOne.setAlive(false);
+                        _currentMenu = new GameOverMenu(this, _currentMenu, graphics.GraphicsDevice.Viewport);
+                        _isInMenus = true;
+                        _soundManager.pauseMusic();
+                        _soundManager.pauseEffects();
                     }
                     else
                     {
@@ -145,55 +189,62 @@ namespace SSD
                     _currentScore += scoreToAdd;
 
                     //Spawn a power up if lucky!
-                    if (!((EnemyEntity)e).isSpawning())
+                    //Calculate a nice sport for the power up to be at. If you use the middle of an entity, if it's too large the player can't pick up!
+                    //Calculate direction vector
+                    Vector3 directionToPlanet = _planet.getMatrix().Translation - e.getMatrix().Translation;
+                    directionToPlanet.Normalize();
+
+                    //Initial spawn vector
+                    Vector3 spawnPoint = e.getMatrix().Translation + directionToPlanet;
+
+                    //Get player's bounding sphere, we'll know that they can reach it then.
+                    BoundingSphere playerBoundingSize = _playerOne.getBoundingSphere();
+                    playerBoundingSize.Center = spawnPoint;
+
+                    //Keep moving till intersecting with the play surface
+                    while (!playerBoundingSize.Intersects(((PlaySphere)_playSphere).getBoundingSphere()))
                     {
-                        //Calculate a nice sport for the power up to be at. If you use the middle of an entity, if it's too large the player can't pick up!
-                        //Calculate direction vector
-                        Vector3 directionToPlanet = _planet.getMatrix().Translation - e.getMatrix().Translation ;
-                        directionToPlanet.Normalize();
+                        playerBoundingSize.Center += directionToPlanet;
+                    }
 
-                        //Initial spawn vector
-                        Vector3 spawnPoint = e.getMatrix().Translation + directionToPlanet;
+                    //Set the spawnPoint to the new value and use below.
+                    spawnPoint = playerBoundingSize.Center;
 
-                        //Get player's bounding sphere, we'll know that they can reach it then.
-                        BoundingSphere playerBoundingSize = _playerOne.getBoundingSphere();
-                        playerBoundingSize.Center = spawnPoint;
-
-                        //Keep moving till intersecting with the play surface
-                        while (!playerBoundingSize.Intersects(((PlaySphere)_playSphere).getBoundingSphere()))
-                        {
-                            playerBoundingSize.Center += directionToPlanet;
-                        }
-
-                        //Set the spawnPoint to the new value and use below.
-                        spawnPoint = playerBoundingSize.Center;
-
-                        switch (_randomGen.Next(0, 50))
-                        {
-                            case 1:
-                                _worldEntities.Add(new SpeedUpPU(spawnPoint, _renderer.getModel("speedPowerUp")));
-                                break;
-                            case 2:
-                                _worldEntities.Add(new SlowDownPU(spawnPoint, _renderer.getModel("slowPowerUp")));
-                                break;
-                            case 3:
-                                _worldEntities.Add(new BulletSpeedPU(spawnPoint, _renderer.getModel("ammoPowerUp")));
-                                break;
-                            case 4:
-                                _worldEntities.Add(new BombPU(spawnPoint, _renderer.getModel("bombPowerUp")));
-                                break;
-                            default:
-                                switch (_randomGen.Next(0, 200))
-                                {
-                                    case 1:
-                                        _worldEntities.Add(new LifePU(spawnPoint, _renderer.getModel("lifePowerUp")));
-                                        break;
-                                    default:
-                                        _worldEntities.Add(new MultiplierPU(spawnPoint, _renderer.getModel("multiplierPowerUp")));
-                                        break;
-                                }
-                                break;
-                        }
+                    switch (_randomGen.Next(0, (int)(100 * _difficultyManager._powerUpChance)))
+                    {
+                        case 1:
+                        case 2:
+                        case 3:
+                        case 4:
+                            _worldEntities.Add(new SpeedUpPU(spawnPoint, _renderer.getModel("speedPowerUp")));
+                            break;
+                        case 5:
+                        case 6:
+                        case 7:
+                        case 8:
+                            _worldEntities.Add(new SlowDownPU(spawnPoint, _renderer.getModel("slowPowerUp")));
+                            break;
+                        case 9:
+                        case 10:
+                        case 11:
+                        case 12:
+                        case 13:
+                        case 14:
+                            _worldEntities.Add(new BulletSpeedPU(spawnPoint, _renderer.getModel("ammoPowerUp")));
+                            break;
+                        case 15:
+                        case 16:
+                        case 17:
+                        case 18:
+                        case 19:
+                            _worldEntities.Add(new BombPU(spawnPoint, _renderer.getModel("bombPowerUp")));
+                            break;
+                        case 20:
+                            _worldEntities.Add(new LifePU(spawnPoint, _renderer.getModel("lifePowerUp")));
+                            break;
+                        default:
+                            _worldEntities.Add(new MultiplierPU(spawnPoint, _renderer.getModel("multiplierPowerUp")));
+                            break;
                     }
 
                     //Spawn particles for dead entity
@@ -226,7 +277,7 @@ namespace SSD
         {
             // TODO: Add your initialization logic here
             Window.Title = "Super Stardust Clone";
-
+            this.IsMouseVisible = true;
             //graphics = new GraphicsDeviceManager(this);
 
             //Setup the game window
@@ -261,6 +312,7 @@ namespace SSD
             _lifeIconPosition = new Vector2(10, 10);
             _bombIcon = Content.Load<Texture2D>("GUI/bombIcon");
             _bombIconPosition = new Vector2(10, 85);
+            _menuBackground = Content.Load<Texture2D>("GUI/menuBackground");
 
             _fontFile = FontLoader.Load("Content/GUI/ui_font.fnt");
             _fontTexture = Content.Load<Texture2D>("GUI/ui_font_0");
@@ -268,50 +320,9 @@ namespace SSD
 
             BoundingSphereRenderer.InitializeGraphics(GraphicsDevice, 30);
 
-            // Declare a new Particle System instance and Initialize it
-            _particleSystemManager = new ParticleSystemManager();
+            //Load particles
+            loadParticleSystems();
 
-            _shipExaustParticles = new TrailParticleSystem(this);
-            _shipBoostParticles = new BoostParticleSystem(this);
-            _shipBoostGlowParticles = new BoostGlowParticleSystem(this);
-            //_bulletSmokeParticles = new SmokeParticleSystem(this);
-            _bulletFireParticles = new FireBulletParticleSystem(this);
-            _bulletIceParticles = new IceBulletParticleSystem(this);
-            _rockExplodeParticles = new ExplosionRockParticleSystem(this);
-            _mineExplodeParticles = new ExplosionMineParticleSystem(this);
-            _shipExplodeParticles = new ShipExplodeParticleSystem(this);
-            _shipBombExplodeParticles = new ShipBombExplodeParticleSystem(this);
-            _powerUpParticles = new PowerUpParticleSystem(this);
-
-            _particleSystemManager.AddParticleSystem(_shipExaustParticles);
-            _particleSystemManager.AddParticleSystem(_shipBoostParticles);
-            _particleSystemManager.AddParticleSystem(_shipBoostGlowParticles);
-            //_particleSystemManager.AddParticleSystem(_bulletSmokeParticles);
-            _particleSystemManager.AddParticleSystem(_bulletFireParticles);
-            _particleSystemManager.AddParticleSystem(_bulletIceParticles);
-            _particleSystemManager.AddParticleSystem(_rockExplodeParticles);
-            _particleSystemManager.AddParticleSystem(_mineExplodeParticles);
-            _particleSystemManager.AddParticleSystem(_shipExplodeParticles);
-            _particleSystemManager.AddParticleSystem(_shipBombExplodeParticles);
-            _particleSystemManager.AddParticleSystem(_powerUpParticles);
-            _particleSystemManager.AutoInitializeAllParticleSystems(this.GraphicsDevice, this.Content, null);
-
-            _shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
-            _shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = false;
-            //_bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
-            _bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
-            _bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
-            _shipExplodeParticles.Emitter.EmitParticlesAutomatically = false;
-            _shipBombExplodeParticles.Emitter.EmitParticlesAutomatically = false;
-            _powerUpParticles.Emitter.EmitParticlesAutomatically = false;
-
-            _rockExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
-            _mineExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
-            _shipExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
-
-            _rockExplodeParticles.ChangeExplosionColor(Color.Cyan);
-            //_mineExplodeParticles.ChangeExplosionColor(Color.Red);
-            
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
@@ -324,6 +335,9 @@ namespace SSD
             _renderer.addModel("spaceSphere", "Models\\space_sphere");
             _renderer.addModel("e_rock", "Models\\asteroid1");
             _renderer.addModel("e_mine", "Models\\mine");
+            _renderer.addModel("e_pushPull", "Models\\e_pushPull");
+            _renderer.addModel("e_iceBossHead", "Models\\e_iceBossHead");
+            _renderer.addModel("e_iceBossTail", "Models\\e_iceBossTail");
             _renderer.addModel("nebula", "Models\\nebula_bg");
             _renderer.addModel("iceBullet", "Models\\iceBullet");
             _renderer.addModel("fireBullet", "Models\\fireBullet");
@@ -353,8 +367,11 @@ namespace SSD
             _soundManager = new SoundManager(Content, _playerOne);
             _spawnManager = new SpawnManager(ref _worldEntities, ref _renderer, ref _soundManager);
 
+            //Setup Menu
+            _currentMenu = new MainMenu(this, null, graphics.GraphicsDevice.Viewport);
+
             //Start level
-            _currentLevel = new LaveLevel(_spawnManager, _randomGen);
+            _currentLevel = new LaveLevel(_spawnManager, _randomGen, _difficultyManager);
 
             _controllerState = GamePad.GetState(PlayerIndex.One);
             //_spawnManager.spawnRocks(200, _planet);
@@ -376,7 +393,8 @@ namespace SSD
             _bulletIceParticles.Destroy();
             _shipExplodeParticles.Destroy();
             _shipBombExplodeParticles.Destroy();
-            _powerUpParticles.Destroy();
+            //_powerUpParticles.Destroy();
+            _pushPullParticles.Destroy();
         }
 
         /// <summary>
@@ -389,45 +407,97 @@ namespace SSD
             updateCount++;
 
             GamePadState curGamepadState = GamePad.GetState(PlayerIndex.One);
+            KeyboardState curKeyboardState = Keyboard.GetState();
+            MouseState curMouseState = Mouse.GetState();
+
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || curKeyboardState.IsKeyDown(Keys.Escape))
+            {
+                this.Exit();
+            }
+
+            if (_isInMenus)
+            {
+                _currentMenu.update(curGamepadState, _controllerState, curKeyboardState, _keyboardState, ref _currentMenu, ref _isInMenus);
+                _controllerState = curGamepadState;
+                _keyboardState = curKeyboardState;
+                return;
+            }
+
+            if (_soundManager.isStopped())
+            {
+                _soundManager.playMusic();
+            }
+            else if (_soundManager.isPaused())
+            {
+                _soundManager.resumeMusic();
+            }
+            else if (_soundManager.areEffectsPaused())
+            {
+                _soundManager.resumeEffects();
+            }
 
             #region Controls
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed)
-                this.Exit();
 
-            if (curGamepadState.Triggers.Left > 0)
+            if (curGamepadState.Buttons.Start == ButtonState.Pressed)
             {
-                _playerOne.useBoost(_soundManager);
+                _isInMenus = true;
+                if (!(_currentMenu is PauseMenu))
+                {
+                    _currentMenu = new PauseMenu(this, _currentMenu, graphics.GraphicsDevice.Viewport);
+                }
+                _soundManager.pauseMusic();
+                _soundManager.pauseEffects();
+                return;
             }
 
-            if (curGamepadState.Buttons.LeftShoulder == ButtonState.Pressed && _controllerState.Buttons.LeftShoulder != ButtonState.Pressed)
+            if (curGamepadState.Triggers.Left > 0
+                || curKeyboardState.IsKeyDown(Keys.Q) && _keyboardState.IsKeyUp(Keys.Q))
             {
-                if(_playerOne.useBomb(_soundManager)){
-                    _shipBombExplodeParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation;
-                    _shipBombExplodeParticles.Explode();
-                    _worldEntities.ForEach(delegate(Entity entity)
+                if (!_playerOne.getInDeathCooldown())
+                {
+                    _playerOne.useBoost(_soundManager);
+                }
+            }
+
+            if (curGamepadState.Buttons.LeftShoulder == ButtonState.Pressed && _controllerState.Buttons.LeftShoulder != ButtonState.Pressed
+                || curKeyboardState.IsKeyDown(Keys.Space) && _keyboardState.IsKeyUp(Keys.Space))
+            {
+                if (_playerOne.useBomb(_soundManager))
+                {
+                    if (!_playerOne.getInDeathCooldown())
                     {
-                        if (entity is EnemyEntity)
+                        _shipBombExplodeParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation;
+                        _shipBombExplodeParticles.Explode();
+                        _worldEntities.ForEach(delegate(Entity entity)
                         {
-                            //Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
-                            if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
+                            if (entity is EnemyEntity)
                             {
-                                entity.setAlive(false);
+                                //Debug.WriteLine((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length());
+                                if ((entity.getMatrix().Translation - _playerOne.getMatrix().Translation).Length() < BLAST_RADIUS)
+                                {
+                                    entity.setAlive(false);
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
 
-            if (curGamepadState.Buttons.RightShoulder == ButtonState.Pressed && _controllerState.Buttons.RightShoulder != ButtonState.Pressed)
+            if (curGamepadState.Buttons.RightShoulder == ButtonState.Pressed && _controllerState.Buttons.RightShoulder != ButtonState.Pressed
+                || curKeyboardState.IsKeyDown(Keys.E) && _keyboardState.IsKeyUp(Keys.E)
+                || curMouseState.RightButton == ButtonState.Pressed && _mouseState.RightButton == ButtonState.Released)
             {
-                _playerOne.switchElement();
-                if (_playerOne.isIceElement())
+                if (!_playerOne.getInDeathCooldown())
                 {
-                    _soundManager.addAttatchment(LoadedSounds.ICE_ACTIVATED, _playerOne);
-                }
-                else
-                {
-                    _soundManager.addAttatchment(LoadedSounds.FIRE_ACTIVATED, _playerOne);
+                    _playerOne.switchElement();
+                    if (_playerOne.isIceElement())
+                    {
+                        _soundManager.addAttatchment(LoadedSounds.ICE_ACTIVATED, _playerOne);
+                    }
+                    else
+                    {
+                        _soundManager.addAttatchment(LoadedSounds.FIRE_ACTIVATED, _playerOne);
+                    }
                 }
             }
 
@@ -439,115 +509,92 @@ namespace SSD
                     _playerOne.setYaw(0);
                     camUp = _playerOne.getMatrix().Left;
                     _playerOne.setYaw(angle);
-
+                    
                     _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X * _playerOne.getSpeed() /* * (gameTime.ElapsedGameTime.Milliseconds / 10) */));
                     _playerOne.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y * _playerOne.getSpeed() /*  * (gameTime.ElapsedGameTime.Milliseconds / 10) */));
                 }
             }
 
-            if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) ||
-                Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S) ||
-                Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A) ||
-                Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
+            if (curKeyboardState.IsKeyDown(Keys.W) || curKeyboardState.IsKeyDown(Keys.Up)   ||
+                curKeyboardState.IsKeyDown(Keys.S) || curKeyboardState.IsKeyDown(Keys.Down) ||
+                curKeyboardState.IsKeyDown(Keys.A) || curKeyboardState.IsKeyDown(Keys.Left) ||
+                curKeyboardState.IsKeyDown(Keys.D) || curKeyboardState.IsKeyDown(Keys.Right)) 
             {
-                Entity playerShip = _playerOne;
-                _playerOne.setYaw(0);
-                camUp = _playerOne.getMatrix().Left;
-
-                if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A))
+                if (!_playerOne.getInDeathCooldown())
                 {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.0075f));
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.0075f));
-                    _playerOne.setYaw(135);
-                }
-                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
-                {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.0075f));
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.0075f));
-                    _playerOne.setYaw(45);
-                }
-                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A))
-                {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.0075f));
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.0075f));
-                    _playerOne.setYaw(-135);
-                }
-                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S) && Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
-                {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.0075f));
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.0075f));
-                    _playerOne.setYaw(-45);
-                }
-                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.W))
-                {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.01f));
-                    _playerOne.setYaw(90);
-                }
-                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.S))
-                {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.01f));
-                    _playerOne.setYaw(-90);
-                }
-                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.A))
-                {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.01f));
-                    _playerOne.setYaw(180);
-                }
-                else if (Keyboard.GetState(PlayerIndex.One).IsKeyDown(Keys.D))
-                {
-                    playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.01f));
+                    Entity playerShip = _playerOne;
                     _playerOne.setYaw(0);
+                    camUp = _playerOne.getMatrix().Left;
+
+                    if (curKeyboardState.IsKeyDown(Keys.W) && curKeyboardState.IsKeyDown(Keys.A) ||
+                        curKeyboardState.IsKeyDown(Keys.Up) && curKeyboardState.IsKeyDown(Keys.Left))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.75f * _playerOne.getSpeed()));
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.75f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(135);
+                    }
+                    else if (curKeyboardState.IsKeyDown(Keys.W) && curKeyboardState.IsKeyDown(Keys.D) ||
+                        curKeyboardState.IsKeyDown(Keys.Up) && curKeyboardState.IsKeyDown(Keys.Right))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 0.75f * _playerOne.getSpeed()));
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.75f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(45);
+                    }
+                    else if (curKeyboardState.IsKeyDown(Keys.S) && curKeyboardState.IsKeyDown(Keys.A) ||
+                        curKeyboardState.IsKeyDown(Keys.Down) && curKeyboardState.IsKeyDown(Keys.Left))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.75f * _playerOne.getSpeed()));
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -0.75f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(-135);
+                    }
+                    else if (curKeyboardState.IsKeyDown(Keys.S) && curKeyboardState.IsKeyDown(Keys.D) ||
+                        curKeyboardState.IsKeyDown(Keys.Down) && curKeyboardState.IsKeyDown(Keys.Right))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -0.75f * _playerOne.getSpeed()));
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 0.75f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(-45);
+                    }
+                    else if (curKeyboardState.IsKeyDown(Keys.W) || curKeyboardState.IsKeyDown(Keys.Up))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, 1f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(90);
+                    }
+                    else if (curKeyboardState.IsKeyDown(Keys.S) || curKeyboardState.IsKeyDown(Keys.Down))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Backward, -1f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(-90);
+                    }
+                    else if (curKeyboardState.IsKeyDown(Keys.A) || curKeyboardState.IsKeyDown(Keys.Left))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, -1f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(180);
+                    }
+                    else if (curKeyboardState.IsKeyDown(Keys.D) || curKeyboardState.IsKeyDown(Keys.Right))
+                    {
+                        playerShip.addRotation(Quaternion.CreateFromAxisAngle(Vector3.Left, 1f * _playerOne.getSpeed()));
+                        _playerOne.setYaw(0);
+                    }
                 }
             }
 
 
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y != 0)
             {
-                if (_lastBulletShot <= 0)
-                {
-                    if (!_playerOne.getInDeathCooldown())
-                    {
-                        float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
-
-                        float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
-                        _playerOne.setYaw(0);
-                        Quaternion playerRotation = _playerOne.getRotation();
-                        _playerOne.setYaw(oldYaw);
-
-                        float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
-
-                        if (_playerOne.isIceElement())
-                        {
-                            for (int iceOffset = 0; iceOffset < 4; ++iceOffset)
-                            {
-                                Bullet newBullet = new IceBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw - 15 + (iceOffset * 10), _renderer.getModel("iceBullet"), _randomGen.Next(1500, 3000), (float)_randomGen.NextDouble() + 0.5f);
-                                newBullet.setSpeed((float)_randomGen.NextDouble() * 0.5f + 0.5f);
-                                _worldEntities.Add(newBullet);
-                                _soundManager.addAttatchment(LoadedSounds.ICE_BULLET_FIRED, newBullet);
-                            }
-                        }
-                        else
-                        {
-                            Bullet newBullet = new FireBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("fireBullet"));
-                            _worldEntities.Add(newBullet);
-                            _soundManager.addAttatchment(LoadedSounds.FIRE_BULLET_FIRED, newBullet);
-                        }
-
-                        //Reset bullet timer
-                        _lastBulletShot = 250 * _playerOne.getShootingSpeed();
-
-                        //If multiple shooting speeds have been picke dup, just cap at 50, seems like a good speed.
-                        if (_lastBulletShot < 50)
-                        {
-                            _lastBulletShot = 50;
-                        }
-                    }
-                }
+                float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
+                shootBullet(angle);
             }
 
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
-                float angle = MathHelper.ToDegrees((float)Math.Atan2(Mouse.GetState().Y - graphics.PreferredBackBufferHeight / 2, Mouse.GetState().X - graphics.PreferredBackBufferWidth / 2));
+                Vector3 cameraPosition = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Up * 500;
+                Vector3 cameraTarget = _playerOne.getMatrix().Translation;
+                Matrix view = Matrix.CreateLookAt(cameraPosition, cameraTarget, camUp);
+                Matrix proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, aspectRatio, 1.0f, 50000.0f);
+                Vector3 projectedPlayerPos = GraphicsDevice.Viewport.Project(Vector3.Zero, proj, view, _playerOne.getMatrix());
+
+                float angle = MathHelper.ToDegrees((float)Math.Atan2(projectedPlayerPos.Y - Mouse.GetState().Y, Mouse.GetState().X - projectedPlayerPos.X));
+
+                shootBullet(angle);
             }
 
             #endregion
@@ -600,7 +647,7 @@ namespace SSD
 
                     //sina = |Va x Vb| / ( |Va| * |Vb| )
                     //cosa = (Va . Vb) / ( |Va| * |Vb| )
-
+                    //im carl and im so bad
                     //angle = atan2( sina, cosa )
 
                     //sign = Vn . ( Va x Vb )
@@ -633,8 +680,13 @@ namespace SSD
                 }
                 else if (_worldEntities[entityID] is PowerUp)
                 {
-                    _powerUpParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
-                    _powerUpParticles.AddParticles(1);
+                    //_powerUpParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
+                    //_powerUpParticles.AddParticles(1);
+                }
+                else if (_worldEntities[entityID] is EnemyPushPull)
+                {
+                    _pushPullParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
+                    _pushPullParticles.AddParticles(5);
                 }
             }
 
@@ -765,17 +817,17 @@ namespace SSD
                                             {
                                                 if (curBullet is FireBullet)
                                                 {
-                                                    elementalBonusDamage += 250;
+                                                    elementalBonusDamage += (int)(250 * _difficultyManager._bonusElementalDamage);
                                                 }
                                             }
                                             else
                                             {
                                                 if (curBullet is IceBullet)
                                                 {
-                                                    elementalBonusDamage += 250;
+                                                    elementalBonusDamage += (int)(250 * _difficultyManager._bonusElementalDamage);
                                                 }
                                             }
-                                            currentEntity.doDamage(((Bullet)checkEntity).getDamage() + elementalBonusDamage);
+                                            currentEntity.doDamage((int)(((Bullet)checkEntity).getDamage() * _difficultyManager._bulletDamage + elementalBonusDamage));
                                             checkEntity.setAlive(false);
                                         }
                                         else if (currentEntity is PlayerEntity)
@@ -790,17 +842,17 @@ namespace SSD
                                             {
                                                 if (curBullet is FireBullet)
                                                 {
-                                                    elementalBonusDamage += 250;
+                                                    elementalBonusDamage += (int)(250 * _difficultyManager._bonusElementalDamage);
                                                 }
                                             }
                                             else
                                             {
                                                 if (curBullet is IceBullet)
                                                 {
-                                                    elementalBonusDamage += 250;
+                                                    elementalBonusDamage += (int)(250 * _difficultyManager._bonusElementalDamage);
                                                 }
                                             }
-                                            currentEntity.doDamage(((Bullet)checkEntity).getDamage() + elementalBonusDamage);
+                                            currentEntity.doDamage((int)(((Bullet)checkEntity).getDamage() * _difficultyManager._bulletDamage + elementalBonusDamage));
                                             checkEntity.setAlive(false);
                                         }
 
@@ -909,8 +961,8 @@ namespace SSD
 
             _soundManager.update(gameTime);
             _fpsManager.update(gameTime);
-            _spawnManager.update(gameTime, _planet);
-            _currentLevel.update(gameTime, _planet);
+            _spawnManager.update(gameTime, _planet, _playerOne);
+            _currentLevel.update(gameTime, _planet, _playerOne);
             _renderer.update(gameTime);
 
             if (_lastBulletShot > 0)
@@ -920,6 +972,8 @@ namespace SSD
 
 
             _controllerState = curGamepadState;
+            _keyboardState = curKeyboardState;
+            _mouseState = curMouseState;
 
 
             base.Update(gameTime);
@@ -940,12 +994,33 @@ namespace SSD
 
             //Console.WriteLine(GraphicsDevice.Adapter.DeviceName.ToString());
 
-            bloom.BeginDraw();
+            
 
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             //graphics.GraphicsDevice.DepthStencilState.DepthBufferEnable = true;
             //graphics.GraphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
+
+            //if (_isInMenus && !(_currentMenu is PauseMenu))
+            //{
+            //    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
+            //    for (int curItem = 0; curItem < _currentMenu.getMenuItems().Count; ++curItem)
+            //    {
+            //        int textWidth = _fontRenderer.TextWidth(_currentMenu.getMenuItems()[curItem], 0.5f);
+            //        if (curItem == _currentMenu.getSelectedItem())
+            //        {
+            //            _fontRenderer.DrawText(spriteBatch, new Vector2(_currentMenu.getOffset().X - (textWidth / 2), _currentMenu.getOffset().Y + (40 * curItem)), _currentMenu.getMenuItems()[curItem], 0.5f, Color.White);
+            //        }
+            //        else
+            //        {
+            //            _fontRenderer.DrawText(spriteBatch, new Vector2(_currentMenu.getOffset().X - (textWidth / 2), _currentMenu.getOffset().Y + (40 * curItem)), _currentMenu.getMenuItems()[curItem], 0.5f, Color.LightBlue);
+            //        }
+            //    }
+            //    spriteBatch.End();
+            //    return;
+            //}
+
+            bloom.BeginDraw();
 
             Viewport viewport = graphics.GraphicsDevice.Viewport;
             float aspectRatio = viewport.AspectRatio;
@@ -1036,7 +1111,31 @@ namespace SSD
 
             spriteBatch.End();
 
-
+            if (_isInMenus)
+            {
+                spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
+                if (_currentLevel.timePlayed().Milliseconds < 1)
+                {
+                    spriteBatch.Draw(_menuBackground, new Vector2(0, 0), Color.White);
+                }
+                else
+                {
+                    spriteBatch.Draw(_menuBackground, new Vector2(0, 0), Color.FromNonPremultiplied(255, 255, 255, 100));
+                }
+                for (int curItem = 0; curItem < _currentMenu.getMenuItems().Count; ++curItem)
+                {
+                    int textWidth = _fontRenderer.TextWidth(_currentMenu.getMenuItems()[curItem], 0.5f);
+                    if (curItem == _currentMenu.getSelectedItem())
+                    {
+                        _fontRenderer.DrawText(spriteBatch, new Vector2(_currentMenu.getOffset().X - (textWidth / 2), _currentMenu.getOffset().Y + (40 * curItem)), _currentMenu.getMenuItems()[curItem], 0.5f, Color.White);
+                    }
+                    else
+                    {
+                        _fontRenderer.DrawText(spriteBatch, new Vector2(_currentMenu.getOffset().X - (textWidth / 2), _currentMenu.getOffset().Y + (40 * curItem)), _currentMenu.getMenuItems()[curItem], 0.5f, Color.LightBlue);
+                    }
+                }
+                spriteBatch.End();
+            }
         }
 
         string formatNumericToString(int number)
@@ -1048,6 +1147,123 @@ namespace SSD
             else
             {
                 return number.ToString("0,0");
+            }
+        }
+
+        private void shootBullet(float angle)
+        {
+            if (_lastBulletShot <= 0)
+            {
+                if (!_playerOne.getInDeathCooldown())
+                {
+                    float oldYaw = MathHelper.ToDegrees(_playerOne.getYaw());
+                    _playerOne.setYaw(0);
+                    Quaternion playerRotation = _playerOne.getRotation();
+                    _playerOne.setYaw(oldYaw);
+
+                    float calcYaw = /*-getEntity("player").getYaw() +*/ angle + 90;
+
+                    if (_playerOne.isIceElement())
+                    {
+                        for (int iceOffset = 0; iceOffset < 4; ++iceOffset)
+                        {
+                            Bullet newBullet = new IceBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw - 15 + (iceOffset * 10), _renderer.getModel("iceBullet"), _randomGen.Next(1500, 3000), (float)_randomGen.NextDouble() + 0.5f);
+                            newBullet.setSpeed((float)_randomGen.NextDouble() * 0.5f + 0.5f);
+                            _worldEntities.Add(newBullet);
+                            _soundManager.addAttatchment(LoadedSounds.ICE_BULLET_FIRED, newBullet);
+                        }
+                    }
+                    else
+                    {
+                        Bullet newBullet = new FireBullet(_playerOne.getMatrix().Translation, playerRotation, calcYaw, _renderer.getModel("fireBullet"));
+                        _worldEntities.Add(newBullet);
+                        _soundManager.addAttatchment(LoadedSounds.FIRE_BULLET_FIRED, newBullet);
+                    }
+
+                    //Reset bullet timer
+                    _lastBulletShot = 250 * _difficultyManager._playerShootSpeed * _playerOne.getShootingSpeed();
+
+                    //If multiple shooting speeds have been picke dup, just cap at 50, seems like a good speed.
+                    if (_lastBulletShot < 50)
+                    {
+                        _lastBulletShot = 50;
+                    }
+                }
+            }
+        }
+
+        private void loadParticleSystems()
+        {
+            // Declare a new Particle System instance and Initialize it
+            _particleSystemManager = new ParticleSystemManager();
+
+            _shipExaustParticles = new TrailParticleSystem(this);
+            _shipBoostParticles = new BoostParticleSystem(this);
+            _shipBoostGlowParticles = new BoostGlowParticleSystem(this);
+            //_bulletSmokeParticles = new SmokeParticleSystem(this);
+            _bulletFireParticles = new FireBulletParticleSystem(this);
+            _bulletIceParticles = new IceBulletParticleSystem(this);
+            _rockExplodeParticles = new ExplosionRockParticleSystem(this);
+            _mineExplodeParticles = new ExplosionMineParticleSystem(this);
+            _shipExplodeParticles = new ShipExplodeParticleSystem(this);
+            _shipBombExplodeParticles = new ShipBombExplodeParticleSystem(this);
+            //_powerUpParticles = new PowerUpParticleSystem(this);
+            _pushPullParticles = new PushPullParticleSystem(this);
+
+            _particleSystemManager.AddParticleSystem(_shipExaustParticles);
+            _particleSystemManager.AddParticleSystem(_shipBoostParticles);
+            _particleSystemManager.AddParticleSystem(_shipBoostGlowParticles);
+            //_particleSystemManager.AddParticleSystem(_bulletSmokeParticles);
+            _particleSystemManager.AddParticleSystem(_bulletFireParticles);
+            _particleSystemManager.AddParticleSystem(_bulletIceParticles);
+            _particleSystemManager.AddParticleSystem(_rockExplodeParticles);
+            _particleSystemManager.AddParticleSystem(_mineExplodeParticles);
+            _particleSystemManager.AddParticleSystem(_shipExplodeParticles);
+            _particleSystemManager.AddParticleSystem(_shipBombExplodeParticles);
+            //_particleSystemManager.AddParticleSystem(_powerUpParticles);
+            _particleSystemManager.AddParticleSystem(_pushPullParticles);
+            _particleSystemManager.AutoInitializeAllParticleSystems(this.GraphicsDevice, this.Content, null);
+
+            _shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = false;
+            //_bulletSmokeParticles.Emitter.EmitParticlesAutomatically = false;
+            _bulletFireParticles.Emitter.EmitParticlesAutomatically = false;
+            _bulletIceParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipExplodeParticles.Emitter.EmitParticlesAutomatically = false;
+            _shipBombExplodeParticles.Emitter.EmitParticlesAutomatically = false;
+            //_powerUpParticles.Emitter.EmitParticlesAutomatically = false;
+            _pushPullParticles.Emitter.EmitParticlesAutomatically = false;
+
+            _rockExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
+            _mineExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
+            _shipExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
+            _pushPullParticles.Emitter.LerpEmittersPositionAndOrientation = false;
+
+            //_rockExplodeParticles.ChangeExplosionColor(Color.Cyan);
+            //_mineExplodeParticles.ChangeExplosionColor(Color.Red);
+        }
+
+        //internal void changeMenu(Menu newMenu)
+        //{
+        //    _currentMenu = newMenu;
+        //}
+
+        public void setGameDifficulty(int difficulty)
+        {
+            switch (difficulty)
+            {
+                case 0:
+                    _difficultyManager.setEasy();
+                    break;
+                case 1:
+                    _difficultyManager.setMedium();
+                    break;
+                case 2:
+                    _difficultyManager.setHard();
+                    break;
+                default:
+                    _difficultyManager.setMedium();
+                    break;
             }
         }
 

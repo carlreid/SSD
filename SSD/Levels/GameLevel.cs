@@ -5,7 +5,7 @@ namespace SSD
 {
     abstract class GameLevel
     {
-        public GameLevel(SpawnManager spawnManager, Random randomGen)
+        public GameLevel(SpawnManager spawnManager, Random randomGen, DifficultyManager difficultyManager)
         {
             _spawnManager = spawnManager;
             _currentPhase = 0;
@@ -15,15 +15,16 @@ namespace SSD
             _spawnCounter = 0;
             _warningColour = Color.Red;
             _colorGoingDown = true;
+            _difficultyManager = difficultyManager;
         }
 
-        public virtual void update(GameTime gameTime, Entity targetPlanet)
+        public virtual void update(GameTime gameTime, Entity targetPlanet, PlayerEntity player)
         {
             _levelTime += gameTime.ElapsedGameTime;
             //_spawnManager.update(gameTime, targetPlanet);
         }
 
-        public TimeSpan timeRemaining(){
+        public TimeSpan timePlayed(){
             return _levelTime;
         }
 
@@ -55,6 +56,11 @@ namespace SSD
             return _warningColour;
         }
 
+        public string getPlanetModelString()
+        {
+            return _planetModel;
+        }
+
         protected TimeSpan _levelTime;
         protected SpawnManager _spawnManager;
         protected int _currentPhase;
@@ -64,5 +70,7 @@ namespace SSD
         protected int _spawnCounter;
         protected Color _warningColour;
         private bool _colorGoingDown;
+        protected string _planetModel;
+        protected DifficultyManager _difficultyManager;
     }
 }
