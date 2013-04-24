@@ -99,6 +99,10 @@ namespace SSD
                     if (powerUp is SpeedUpPU)
                     {
                         _shipSpeed -= powerUp.getIncreaseBy();
+                        if (_shipSpeed <= 0.01f)
+                        {
+                            _shipSpeed = 0.01f;
+                        }
                     }
                     else if (powerUp is SlowDownPU)
                     {

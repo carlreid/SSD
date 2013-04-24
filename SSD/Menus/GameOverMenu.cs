@@ -40,5 +40,11 @@ namespace SSD
                     break;
             }
         }
+
+        protected override void handleBack(string item, ref Menu currentDisplay, ref bool inMenu)
+        {
+            inMenu = false;
+            _mainGame.restartGame(1);
+        }
     }
 }

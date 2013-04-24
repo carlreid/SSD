@@ -41,5 +41,10 @@ namespace SSD
                     break;
             }
         }
+
+        protected override void handleBack(string item, ref Menu currentDisplay, ref bool inMenu)
+        {
+            currentDisplay = _callerMenu;
+        }
     }
 }

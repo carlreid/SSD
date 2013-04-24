@@ -34,6 +34,9 @@ namespace SSD
         Texture2D _healthShieldBar;
         Texture2D _healthShieldFrame;
 
+        Texture2D _xboxA;
+        Texture2D _xboxB;
+
         SoundManager _soundManager;
         FPSManager _fpsManager = new FPSManager();
         SpawnManager _spawnManager;
@@ -325,6 +328,9 @@ namespace SSD
             _fontTexture = Content.Load<Texture2D>("GUI/ui_font_0");
             _fontRenderer = new FontRenderer(_fontFile, _fontTexture);
 
+            _xboxA = Content.Load<Texture2D>("GUI/xboxControllerButtonA");
+            _xboxB = Content.Load<Texture2D>("GUI/xboxControllerButtonB");
+
             _healthShieldBackground = Content.Load<Texture2D>("GUI/health_shield_background");
             _healthShieldBar = Content.Load<Texture2D>("GUI/health_shield_bar");
             _healthShieldFrame = Content.Load<Texture2D>("GUI/health_shield_frame");
@@ -421,10 +427,10 @@ namespace SSD
             KeyboardState curKeyboardState = Keyboard.GetState();
             MouseState curMouseState = Mouse.GetState();
 
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || curKeyboardState.IsKeyDown(Keys.Escape))
-            {
-                this.Exit();
-            }
+            //if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || curKeyboardState.IsKeyDown(Keys.Escape))
+            //{
+            //    this.Exit();
+            //}
 
             if (_isInMenus)
             {
@@ -1113,8 +1119,6 @@ namespace SSD
             spriteBatch.DrawString(_hudFont, "Draw: " + drawCount.ToString(), new Vector2(viewport.Width - 160, viewport.Height - 60), Color.White);
             spriteBatch.DrawString(_hudFont, "Update: " + updateCount.ToString(), new Vector2(viewport.Width - 180, viewport.Height - 90), Color.White);
 
-            spriteBatch.DrawString(_hudFont, _playerOne.getHealth().ToString("0,0"), new Vector2(300, 300), Color.Black);
-
             //Draw boost graphic
             int flameHeight = (int)(_boostFlame.Height * _playerOne.getBoostReplenishedScalar());
             spriteBatch.Draw(_boostFlame, new Rectangle((int)_boostFlamePosition.X, (int)_boostFlamePosition.Y + _boostFlame.Height - flameHeight, _boostFlame.Width, flameHeight),
@@ -1212,7 +1216,6 @@ namespace SSD
                     }
                 }
 
-
                 if (_currentMenu is WinMenu)
                 {
                     int youWinWidth = _fontRenderer.TextWidth("You Win!");
@@ -1221,6 +1224,15 @@ namespace SSD
                     _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width / 2 - finalScoreWidth / 2, viewport.Height - 200), "Final Score: " + formatNumericToString(_currentScore), 1, Color.Green);
                 }
 
+                //Draw Buttons
+                Vector2 aButtonPos = new Vector2(viewport.Width / 2 - 150, viewport.Height - 100);
+                spriteBatch.Draw(_xboxA, new Rectangle((int)aButtonPos.X, (int)aButtonPos.Y, _xboxA.Width / 2, _xboxA.Height / 2), Color.White);
+                _fontRenderer.DrawText(spriteBatch, new Vector2(aButtonPos.X + 55, aButtonPos.Y + 4), "Select", 0.5f);
+                Vector2 bButtonPos = new Vector2(viewport.Width / 2 + 50, viewport.Height - 100);
+                spriteBatch.Draw(_xboxB, new Rectangle((int)bButtonPos.X, (int)bButtonPos.Y, _xboxB.Width / 2, _xboxB.Height / 2), Color.White);
+                _fontRenderer.DrawText(spriteBatch, new Vector2(bButtonPos.X + 55, bButtonPos.Y + 4), "Back", 0.5f);
+
+                _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width / 2 - 150, viewport.Height - 60), "       (SPACE)         (ESC)", 0.38f);
 
                 spriteBatch.End();
             }

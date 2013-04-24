@@ -22,12 +22,14 @@ namespace SSD
         public void update(GamePadState gamePadState, GamePadState lastGamePadState, KeyboardState keyboardState, KeyboardState lastKeyboardState, ref Menu currentDisplay, ref bool inMenu)
         {
             if (gamePadState.DPad.Up == ButtonState.Pressed && lastGamePadState.DPad.Up == ButtonState.Released
-                || keyboardState.IsKeyDown(Keys.W) && lastKeyboardState.IsKeyUp(Keys.W) || keyboardState.IsKeyDown(Keys.Up) && lastKeyboardState.IsKeyUp(Keys.Up))
+                || keyboardState.IsKeyDown(Keys.W) && lastKeyboardState.IsKeyUp(Keys.W) || keyboardState.IsKeyDown(Keys.Up) && lastKeyboardState.IsKeyUp(Keys.Up)
+                || gamePadState.ThumbSticks.Left.Y > 0 && lastGamePadState.ThumbSticks.Left.Y <= 0)
             {
                 goUp();
             }
             else if (gamePadState.DPad.Down == ButtonState.Pressed && lastGamePadState.DPad.Down == ButtonState.Released
-                || keyboardState.IsKeyDown(Keys.S) && lastKeyboardState.IsKeyUp(Keys.S) || keyboardState.IsKeyDown(Keys.Down) && lastKeyboardState.IsKeyUp(Keys.Down))
+                || keyboardState.IsKeyDown(Keys.S) && lastKeyboardState.IsKeyUp(Keys.S) || keyboardState.IsKeyDown(Keys.Down) && lastKeyboardState.IsKeyUp(Keys.Down)
+                || gamePadState.ThumbSticks.Left.Y < 0 && lastGamePadState.ThumbSticks.Left.Y >= 0)
             {
                 goDown();
             }
@@ -35,6 +37,10 @@ namespace SSD
                 || keyboardState.IsKeyDown(Keys.Space) && lastKeyboardState.IsKeyUp(Keys.Space))
             {
                 handleSelected(_menuItems[_selectedItem], ref  currentDisplay, ref inMenu);
+            }
+            else if (gamePadState.Buttons.B == ButtonState.Pressed && lastGamePadState.Buttons.B == ButtonState.Released)
+            {
+                handleBack(_menuItems[_selectedItem], ref  currentDisplay, ref inMenu);
             }
             //else
             //{
@@ -75,6 +81,11 @@ namespace SSD
         }
 
         virtual protected void handleSelected(string item, ref Menu currentDisplay, ref bool inMenu)
+        {
+            //Handle in menu class
+        }
+
+        virtual protected void handleBack(string item, ref Menu currentDisplay, ref bool inMenu)
         {
             //Handle in menu class
         }

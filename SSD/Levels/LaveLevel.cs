@@ -251,7 +251,7 @@ namespace SSD
             {
                 if (!_drawWarning && _spawnCounter == 0)
                 {
-                    _warningTime = TimeSpan.FromSeconds(20);
+                    _warningTime = TimeSpan.FromSeconds(10);
                     _drawWarning = true;
                 }
                 else
@@ -277,7 +277,7 @@ namespace SSD
             {
                 if (!_drawWarning && _spawnCounter == 0)
                 {
-                    _warningTime = TimeSpan.FromSeconds(1); //30
+                    _warningTime = TimeSpan.FromSeconds(30); //30
                     _drawWarning = true;
                 }
                 else

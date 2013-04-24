@@ -46,5 +46,11 @@ namespace SSD
             }
         }
 
+        protected override void handleBack(string item, ref Menu currentDisplay, ref bool inMenu)
+        {
+            currentDisplay = _callerMenu;
+            _mainGame.restartGame(1);
+        }
+
     }
 }
