@@ -48,7 +48,7 @@ namespace DPSF.ParticleSystems
         /// <summary>
         /// Get / Set the Camera Position used by the particle system
         /// </summary>
-        public Vector3 CameraPosition { get; set; }
+        //public Vector3 CameraPosition { get; set; }
 
         //===========================================================
         // Overridden Particle System Functions

@@ -96,7 +96,6 @@
     <Compile Include="Draw\FontRenderer.cs" />
     <Compile Include="Draw\ScoreText.cs" />
     <Compile Include="Entity\Bullet\Bullet.cs" />
-    <Compile Include="Camera.cs" />
     <Compile Include="Entity\Enemy\EnemyIceBit.cs" />
     <Compile Include="Entity\Enemy\EnemyIceBoss.cs" />
     <Compile Include="Entity\Enemy\EnemyPushPull.cs" />
@@ -116,6 +115,7 @@
     <Compile Include="Managers\DifficultyManager.cs" />
     <Compile Include="Managers\FPSManager.cs" />
     <Compile Include="Entity\Bullet\IceBullet.cs" />
+    <Compile Include="Menus\ControlsMenu.cs" />
     <Compile Include="Menus\WinMenu.cs" />
     <Compile Include="Menus\GameOverMenu.cs" />
     <Compile Include="Menus\OptionsMenu.cs" />

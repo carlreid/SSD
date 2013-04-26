@@ -25,18 +25,27 @@ namespace SSD
         SpriteFont _hudFont;
         Random _randomGen = new Random();
 
+        //Fonts and GUI
         FontFile _fontFile;
         Texture2D _fontTexture;
         FontRenderer _fontRenderer;
         Texture2D _menuBackground;
-
         Texture2D _healthShieldBackground;
         Texture2D _healthShieldBar;
         Texture2D _healthShieldFrame;
-
         Texture2D _xboxA;
         Texture2D _xboxB;
+        Texture2D _gameControls;
+        Texture2D _boostOverlay = null;
+        Vector2 _boostOverlayPosition;
+        Texture2D _boostFlame = null;
+        Vector2 _boostFlamePosition;
+        Texture2D _lifeIcon = null;
+        Vector2 _lifeIconPosition;
+        Texture2D _bombIcon = null;
+        Vector2 _bombIconPosition;
 
+        //Managers and Bloom
         SoundManager _soundManager;
         FPSManager _fpsManager = new FPSManager();
         SpawnManager _spawnManager;
@@ -44,32 +53,35 @@ namespace SSD
         GameLevel _currentLevel;
         DifficultyManager _difficultyManager = new DifficultyManager();
 
+        //Game related variables
         const float BLAST_RADIUS = 250.0f;
         float aspectRatio;
         float _lastBulletShot = 0;
         int _currentScore;
 
+        //Drawing variables
         Draw _renderer;
         Vector3 camUp = Vector3.Left;
-        //Entity playerEntity;
 
+        //References to entities that exisit in all levels
         PlayerEntity _playerOne;
         Entity _universe;
         Entity _planet;
         Entity _playSphere;
 
+        //Reserve a list of 150 entities
         List<Entity> _worldEntities = new List<Entity>(150);
 
+        //Just to check draw and update count
         int drawCount = 0;
         int updateCount = 0;
 
+        //Variables to keep track of menu status
         bool _isInMenus = true;
         Menu _currentMenu;
 
-        //Dictionary<String, Entity> _entities = new Dictionary<string,Entity>();
-        //List<Bullet> _bullets = new List<Bullet>();
-
-        // Declare our Particle System variable
+        //Create all the particle systems
+        //Could have possibly moved all this into a particle manager.
         ParticleSystemManager _particleSystemManager = null;
         TrailParticleSystem _shipExaustParticles = null;
         BoostParticleSystem _shipBoostParticles = null;
@@ -82,33 +94,23 @@ namespace SSD
         ShipExplodeParticleSystem _shipExplodeParticles = null;
         ShipBombExplodeParticleSystem _shipBombExplodeParticles = null;
         //PowerUpParticleSystem _powerUpParticles = null;
-        PushPullParticleSystem _pushPullParticles = null;
+        //PushPullParticleSystem _pushPullParticles = null;
 
         //Input States to keep backup
-        //KeyboardState l;
         GamePadState _controllerState;
         KeyboardState _keyboardState;
         MouseState _mouseState;
-
-
-        Texture2D _boostOverlay = null;
-        Vector2 _boostOverlayPosition;
-        Texture2D _boostFlame = null;
-        Vector2 _boostFlamePosition;
-        Texture2D _lifeIcon = null;
-        Vector2 _lifeIconPosition;
-        Texture2D _bombIcon = null;
-        Vector2 _bombIconPosition;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-
         }
 
+        //Call this when wanting to restart the game or load a new level
         public void restartGame(int levelToLoad)
         {
+            //Currently only one level
             switch(levelToLoad){
                 case 1:
                     _currentLevel = new LaveLevel(_spawnManager, _randomGen, _difficultyManager);
@@ -117,7 +119,10 @@ namespace SSD
                     break;
             }
 
+            //Clear the world entities
             _worldEntities.Clear();
+
+            //Add the reference entities
             _worldEntities.Add(new PlayerEntity(new Vector3(0, 400f, 0), _renderer.getModel("playerShip"), 1f, 90));
             _playerOne = (PlayerEntity)_worldEntities[_worldEntities.Count - 1];
 
@@ -130,15 +135,19 @@ namespace SSD
             _worldEntities.Add(new PlaySphere(Vector3.Zero, _renderer.getModel("playSphere"), 15f));
             _playSphere = _worldEntities[_worldEntities.Count - 1];
 
+            //Reset the sound manager
             _soundManager.stopMusic();
             _soundManager.reset(_playerOne);
+
+            //Reload the particle systems
             loadParticleSystems();
 
+            //Reset camera and score
             camUp = Vector3.Left;
             _currentScore = 0;
-
         }
 
+        //Call this when checking to remove entities
         private bool removeEntity(Entity e)
         {
             //Special case when play dies
@@ -156,6 +165,7 @@ namespace SSD
                     _shipExplodeParticles.ExplosionIntensity = 2000;
                     _shipExplodeParticles.Explode();
 
+                    //If the player is out of lives show game over
                     if (_playerOne.getLives() < 0)
                     {
                         _playerOne.setAlive(false);
@@ -166,9 +176,11 @@ namespace SSD
                     }
                     else
                     {
+                        //Otherwise make them alive again
                         _playerOne.setAlive(true);
                     }
 
+                    //Now check to see if entities are within BLAST_RADIUS
                     _worldEntities.ForEach(delegate(Entity entity)
                     {
                         if (entity is EnemyEntity)
@@ -178,6 +190,7 @@ namespace SSD
                             {
                                 if (!(entity is EnemyIceBoss))
                                 {
+                                    //Entity is within blast radius, kill it.
                                     entity.setAlive(false);
                                 }
                             }
@@ -190,10 +203,12 @@ namespace SSD
 
             if (!e.getAlive())
             {
+                //Get the sound manager to play the entity death sound
                 _soundManager.playDeathSound(e);
 
                 if (e is EnemyEntity)
                 {
+                    //Add the score from the entity
                     int scoreToAdd = (int)(((EnemyEntity)e).getScore() * _playerOne.getScoreMultiplier());
                     _renderer.addScore(e.getMatrix(), scoreToAdd);
                     _currentScore += scoreToAdd;
@@ -285,10 +300,8 @@ namespace SSD
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
             Window.Title = "Cosmic Dust";
             this.IsMouseVisible = true;
-            //graphics = new GraphicsDeviceManager(this);
 
             //Setup the game window
             graphics.PreferredBackBufferWidth = 1280;
@@ -297,10 +310,10 @@ namespace SSD
             graphics.PreferMultiSampling = true;
             graphics.ApplyChanges();
 
+            //Start up the bloom component
             bloom = new BloomComponent(this);
             bloom.Settings = BloomSettings.PresetSettings[0]; //3
             bloom.Visible = true;
-
             Components.Add(bloom);
 
             base.Initialize();
@@ -312,8 +325,8 @@ namespace SSD
         /// </summary>
         protected override void LoadContent()
         {
+            //Load in all the GUI textures and fonts
             _hudFont = Content.Load<SpriteFont>("hudFont");
-
             _boostOverlay = Content.Load<Texture2D>("GUI/boost_overlay");
             _boostOverlayPosition = new Vector2(10, graphics.GraphicsDevice.Viewport.Height - (_boostOverlay.Height + 20));
             _boostFlame = Content.Load<Texture2D>("GUI/boost_flame");
@@ -323,18 +336,17 @@ namespace SSD
             _bombIcon = Content.Load<Texture2D>("GUI/bombIcon");
             _bombIconPosition = new Vector2(10, 85);
             _menuBackground = Content.Load<Texture2D>("GUI/menuBackground");
-
+            _gameControls = Content.Load<Texture2D>("GUI/controls");
             _fontFile = FontLoader.Load("Content/GUI/ui_font.fnt");
             _fontTexture = Content.Load<Texture2D>("GUI/ui_font_0");
             _fontRenderer = new FontRenderer(_fontFile, _fontTexture);
-
             _xboxA = Content.Load<Texture2D>("GUI/xboxControllerButtonA");
             _xboxB = Content.Load<Texture2D>("GUI/xboxControllerButtonB");
-
             _healthShieldBackground = Content.Load<Texture2D>("GUI/health_shield_background");
             _healthShieldBar = Content.Load<Texture2D>("GUI/health_shield_bar");
             _healthShieldFrame = Content.Load<Texture2D>("GUI/health_shield_frame");
 
+            //Start up the bounding sphere draw
             BoundingSphereRenderer.InitializeGraphics(GraphicsDevice, 30);
 
             //Load particles
@@ -390,8 +402,10 @@ namespace SSD
             //Start level
             _currentLevel = new LaveLevel(_spawnManager, _randomGen, _difficultyManager);
 
+            //Get the initial states
             _controllerState = GamePad.GetState(PlayerIndex.One);
-            //_spawnManager.spawnRocks(200, _planet);
+            _keyboardState = Keyboard.GetState();
+            _mouseState = Mouse.GetState();
         }
 
         /// <summary>
@@ -400,18 +414,8 @@ namespace SSD
         /// </summary>
         protected override void UnloadContent()
         {
-            // TODO: Unload any non ContentManager content here
-
-            _shipExaustParticles.Destroy();
-            _shipBoostParticles.Destroy();
-            _shipBoostGlowParticles.Destroy();
-            //_bulletSmokeParticles.Destroy();
-            _bulletFireParticles.Destroy();
-            _bulletIceParticles.Destroy();
-            _shipExplodeParticles.Destroy();
-            _shipBombExplodeParticles.Destroy();
-            //_powerUpParticles.Destroy();
-            _pushPullParticles.Destroy();
+            //Call destroy on particle systems
+            _particleSystemManager.DestroyAndRemoveAllParticleSystems();
         }
 
         /// <summary>
@@ -423,6 +427,7 @@ namespace SSD
         {
             updateCount++;
 
+            //Get the current control states
             GamePadState curGamepadState = GamePad.GetState(PlayerIndex.One);
             KeyboardState curKeyboardState = Keyboard.GetState();
             MouseState curMouseState = Mouse.GetState();
@@ -432,6 +437,7 @@ namespace SSD
             //    this.Exit();
             //}
 
+            //If the game is running menus, run update and return.
             if (_isInMenus)
             {
                 _currentMenu.update(curGamepadState, _controllerState, curKeyboardState, _keyboardState, ref _currentMenu, ref _isInMenus);
@@ -460,6 +466,7 @@ namespace SSD
                 }
             }
 
+            //Check sound manager to resume and music that may have paused due to menus
             if (_soundManager.isStopped())
             {
                 _soundManager.playMusic();
@@ -475,6 +482,7 @@ namespace SSD
 
             #region Controls
 
+            //Launch menu if START or ESCAPE is pressed
             if (curGamepadState.Buttons.Start == ButtonState.Pressed || curKeyboardState.IsKeyDown(Keys.Escape) && _keyboardState.IsKeyUp(Keys.Escape))
             {
                 _isInMenus = true;
@@ -488,6 +496,7 @@ namespace SSD
                 return;
             }
 
+            //Boost if LEFT TRIGGER or Q KEY is pressed
             if (curGamepadState.Triggers.Left > 0
                 || curKeyboardState.IsKeyDown(Keys.Q) && _keyboardState.IsKeyUp(Keys.Q))
             {
@@ -497,6 +506,7 @@ namespace SSD
                 }
             }
 
+            //Use bomb if LEFT BUMPER or SPACE KEY is pressed
             if (curGamepadState.Buttons.LeftShoulder == ButtonState.Pressed && _controllerState.Buttons.LeftShoulder != ButtonState.Pressed
                 || curKeyboardState.IsKeyDown(Keys.Space) && _keyboardState.IsKeyUp(Keys.Space))
             {
@@ -528,6 +538,7 @@ namespace SSD
                 }
             }
 
+            //Switch elements if RIGHT BUMPER or E KEY is pressed
             if (curGamepadState.Buttons.RightShoulder == ButtonState.Pressed && _controllerState.Buttons.RightShoulder != ButtonState.Pressed
                 || curKeyboardState.IsKeyDown(Keys.E) && _keyboardState.IsKeyUp(Keys.E)
                 || curMouseState.RightButton == ButtonState.Pressed && _mouseState.RightButton == ButtonState.Released)
@@ -546,6 +557,7 @@ namespace SSD
                 }
             }
 
+            //Move player if LEFT STICK is moved
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Left.Y != 0)
             {
                 if (!_playerOne.getInDeathCooldown())
@@ -560,6 +572,7 @@ namespace SSD
                 }
             }
 
+            //Move player if WASD KEY or ARROW KEY is pressed
             if (curKeyboardState.IsKeyDown(Keys.W) || curKeyboardState.IsKeyDown(Keys.Up)   ||
                 curKeyboardState.IsKeyDown(Keys.S) || curKeyboardState.IsKeyDown(Keys.Down) ||
                 curKeyboardState.IsKeyDown(Keys.A) || curKeyboardState.IsKeyDown(Keys.Left) ||
@@ -622,13 +635,14 @@ namespace SSD
                 }
             }
 
-
+            //Shoot a bullet if the RIGHT STICK is moved
             if (GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X != 0 || GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y != 0)
             {
                 float angle = MathHelper.ToDegrees((float)Math.Atan2(GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.Y, GamePad.GetState(PlayerIndex.One).ThumbSticks.Right.X));
                 shootBullet(angle);
             }
 
+            //Shoot a bullet in the direction that LEFT CLICK was pressed
             if (Mouse.GetState().LeftButton == ButtonState.Pressed)
             {
                 Vector3 cameraPosition = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Up * 500;
@@ -644,23 +658,28 @@ namespace SSD
 
             #endregion
 
-
-            //foreach (Entity entity in _worldEntities)
             //Update all entities
+            //Calculate the players affect on time (slow down power up)
             float calc = gameTime.ElapsedGameTime.Ticks * _playerOne.getAffectOnTime();
             TimeSpan playerAffectOnTime = new TimeSpan((long)calc);
+
+            //Loop over all entities
+            //Could have possibly been a .ForEach loop
             for (int entityID = 0; entityID < _worldEntities.Count; ++entityID)
             {
+                //Check to see if the entitiy is a Player
                 if (_worldEntities[entityID] is PlayerEntity)
                 {
+                    //Update as normal
                     _worldEntities[entityID].update(gameTime.ElapsedGameTime);
                 }
                 else
                 {
+                    //Update with time affected by player power up
                     _worldEntities[entityID].update(playerAffectOnTime);
                 }
 
-                //_worldEntities[entityID].update(gameTime.ElapsedGameTime);
+                //If entity is a bullet, spawn the particle for it.
                 if (_worldEntities[entityID] is Bullet)
                 {
                     if (_worldEntities[entityID] is IceBullet)
@@ -674,37 +693,32 @@ namespace SSD
                         _bulletFireParticles.AddParticle();
                     }
                 }
+                //If entitiy is a turret, try shoot
+                //TODO: Make this work. Currently no turrets.
                 else if (_worldEntities[entityID] is EnemyTurret)
                 {
                     EnemyTurret turret = (EnemyTurret)_worldEntities[entityID];
 
+                    //Check if the turret can shoot
                     if (!turret.shouldShoot())
                     {
                         continue;
                     }
 
 
+                    /*
+                     * To fix this, I think I'm going to have to fix up the orientation on models.
+                     * That way I can use their up vector to correctly calculate the fire direction.
+                     * Also, the bullet can inherit the entities rotation and shoot correctly.
+                     */
+
                     Vector3 Va = _playerOne.getMatrix().Translation;
                     Vector3 Vb = turret.getMatrix().Translation;
                     Va.Normalize();
                     Vb.Normalize();
 
-
-                    //sina = |Va x Vb| / ( |Va| * |Vb| )
-                    //cosa = (Va . Vb) / ( |Va| * |Vb| )
-                    //im carl and im so bad
-                    //angle = atan2( sina, cosa )
-
-                    //sign = Vn . ( Va x Vb )
-                    //if(sign<0)
-                    //{
-                    //    angle=-angle
-                    //}
-
-
                     float sina = Vector3.Cross(Va, Vb).Length() / (Va.Length() * Vb.Length());
                     float cosa = Vector3.Dot(Va, Vb) / (Va.Length() * Vb.Length());
-                    //float angle = (float)MathHelper.ToDegrees((float)Math.Atan2(sina, cosa));
                     float sign = Vector3.Dot(_playerOne.getMatrix().Up, Vector3.Cross(Va, Vb));
 
                     Vector3 direction = _playerOne.getMatrix().Translation - turret.getMatrix().Translation;
@@ -723,20 +737,24 @@ namespace SSD
                     _worldEntities.Add(newBullet);
                     turret.didShoot();
                 }
+                //Add particles if it's a power up
                 else if (_worldEntities[entityID] is PowerUp)
                 {
+                    //Disabled due to not looking so good and lag
                     //_powerUpParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
                     //_powerUpParticles.AddParticles(1);
                 }
+                //Add particles for the PushPull enemy
                 else if (_worldEntities[entityID] is EnemyPushPull)
                 {
-                    _pushPullParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
-                    _pushPullParticles.AddParticles(5);
+                    //Disabled due to not looking so good and REALLY BAD lag
+                    //_pushPullParticles.Emitter.PositionData.Position = _worldEntities[entityID].getMatrix().Translation;
+                    //_pushPullParticles.AddParticles(5);
                 }
             }
 
             #region Collision Checking
-            //Check for collision, maybe move elsewhere
+            //Check for collision, maybe would have been wise to move elsewhere
             for (int entity = 0; entity < _worldEntities.Count; ++entity)
             {
                 //Check entity is a ModelEntity (These mainly have bounding spheres)
@@ -810,7 +828,7 @@ namespace SSD
                                     }
 
                                     //Check to see if either entity is a bullet. If so, apply bullet damage.
-                                    //IF THINGS GO WRONG UNCOMMENT THIS
+                                    //IF THINGS GO WRONG UNCOMMENT THIS (Bullets not colliding)
                                     //if (currentEntity is Bullet)
                                     //{
                                     //    Bullet curBullet = (Bullet)currentEntity;
@@ -969,6 +987,7 @@ namespace SSD
                 }
                 else if (_worldEntities[entity] is EnemyIceBoss)
                 {
+                    //Do damage if colliding with ice bit
                     foreach (EnemyIceBit iceBit in ((EnemyIceBoss)_worldEntities[entity]).getMyBits())
                     {
                         if (iceBit.getBoundingSphere().Intersects(_playerOne.getBoundingSphere()))
@@ -986,6 +1005,7 @@ namespace SSD
                 }
             }
 
+            //Do a remove all which will check if the entitiy should be removed
             _worldEntities.RemoveAll(removeEntity);
 
             #endregion
@@ -1008,18 +1028,20 @@ namespace SSD
                 _shipExaustParticles.TrailStartColor = Color.Red;
             }
 
-            //Change emitter positions
+            //Update emitter positions
             _shipExaustParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Backward * 10;
             _shipBoostParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation + _playerOne.getMatrix().Forward * 20;
             _shipBoostParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
             _shipBoostGlowParticles.Emitter.PositionData.Position = _playerOne.getMatrix().Translation +  _playerOne.getMatrix().Up * 10 + _playerOne.getMatrix().Forward * 10;
             _shipBoostGlowParticles.Emitter.EmitParticlesAutomatically = _playerOne.isBoosting();
 
+            //Give the universe and planet some rotation
             _universe.addRoll(-0.001f);
             _universe.addYaw(-0.005f);
             _planet.addRoll(0.02f);
             _planet.addPitch(0.05f);
 
+            //Call update on managers
             _soundManager.update(gameTime);
             _fpsManager.update(gameTime);
             if (!_currentLevel.isEndGame())
@@ -1029,12 +1051,13 @@ namespace SSD
             _currentLevel.update(gameTime, _planet, _playerOne);
             _renderer.update(gameTime);
 
+            //Reduce last shot time
             if (_lastBulletShot > 0)
             {
                 _lastBulletShot -= gameTime.ElapsedGameTime.Milliseconds;
             }
 
-
+            //Save current control states
             _controllerState = curGamepadState;
             _keyboardState = curKeyboardState;
             _mouseState = curMouseState;
@@ -1062,28 +1085,8 @@ namespace SSD
 
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.CornflowerBlue, 1.0f, 0);
             graphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            //graphics.GraphicsDevice.DepthStencilState.DepthBufferEnable = true;
-            //graphics.GraphicsDevice.DepthStencilState.DepthBufferWriteEnable = true;
 
-            //if (_isInMenus && !(_currentMenu is PauseMenu))
-            //{
-            //    spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
-            //    for (int curItem = 0; curItem < _currentMenu.getMenuItems().Count; ++curItem)
-            //    {
-            //        int textWidth = _fontRenderer.TextWidth(_currentMenu.getMenuItems()[curItem], 0.5f);
-            //        if (curItem == _currentMenu.getSelectedItem())
-            //        {
-            //            _fontRenderer.DrawText(spriteBatch, new Vector2(_currentMenu.getOffset().X - (textWidth / 2), _currentMenu.getOffset().Y + (40 * curItem)), _currentMenu.getMenuItems()[curItem], 0.5f, Color.White);
-            //        }
-            //        else
-            //        {
-            //            _fontRenderer.DrawText(spriteBatch, new Vector2(_currentMenu.getOffset().X - (textWidth / 2), _currentMenu.getOffset().Y + (40 * curItem)), _currentMenu.getMenuItems()[curItem], 0.5f, Color.LightBlue);
-            //        }
-            //    }
-            //    spriteBatch.End();
-            //    return;
-            //}
-
+            //Begin the bloom drawing
             bloom.BeginDraw();
 
             Viewport viewport = graphics.GraphicsDevice.Viewport;
@@ -1193,6 +1196,7 @@ namespace SSD
 
             spriteBatch.End();
 
+            //Draw the menus if we're in them
             if (_isInMenus)
             {
                 spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend);
@@ -1217,12 +1221,25 @@ namespace SSD
                     }
                 }
 
+                //Would have been a better idea to haw a draw call in the menus.
                 if (_currentMenu is WinMenu)
                 {
                     int youWinWidth = _fontRenderer.TextWidth("You Win!");
                     _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width / 2 - youWinWidth / 2, viewport.Height - 300), "You Win!", 1, Color.Green);
                     int finalScoreWidth = _fontRenderer.TextWidth("Final Score: " + formatNumericToString(_currentScore));
                     _fontRenderer.DrawText(spriteBatch, new Vector2(viewport.Width / 2 - finalScoreWidth / 2, viewport.Height - 200), "Final Score: " + formatNumericToString(_currentScore), 1, Color.Green);
+                }
+                else if (_currentMenu is ControlsMenu)
+                {
+                    Rectangle source = new Rectangle(0, 0, _gameControls.Width, _gameControls.Height);
+                    Rectangle destination = new Rectangle((int)(_currentMenu.getOffset().X - _gameControls.Width / 2), (int)(_currentMenu.getOffset().Y - _gameControls.Height),
+                                                          _gameControls.Width, _gameControls.Height);
+
+                    //Texture2D fakeTexture = new Texture2D(GraphicsDevice, 1, 1);
+                    //fakeTexture.SetData(new Color[] { Color.Black });
+                    //spriteBatch.Draw(fakeTexture, destination, Color.FromNonPremultiplied(0, 0, 0, 160));
+
+                    spriteBatch.Draw(_gameControls, destination, source, Color.White);
                 }
 
                 //Draw Buttons
@@ -1239,6 +1256,7 @@ namespace SSD
             }
         }
 
+        //Returns a formatted number like "10,000,000"
         string formatNumericToString(int number)
         {
             if (number <= 999 && number >= -999)
@@ -1251,6 +1269,7 @@ namespace SSD
             }
         }
 
+        //Shoots a bullet in given angle from player
         private void shootBullet(float angle)
         {
             if (_lastBulletShot <= 0)
@@ -1293,6 +1312,7 @@ namespace SSD
             }
         }
 
+        //Will load in all particle systems
         private void loadParticleSystems()
         {
             // Declare a new Particle System instance and Initialize it
@@ -1309,7 +1329,7 @@ namespace SSD
             _shipExplodeParticles = new ShipExplodeParticleSystem(this);
             _shipBombExplodeParticles = new ShipBombExplodeParticleSystem(this);
             //_powerUpParticles = new PowerUpParticleSystem(this);
-            _pushPullParticles = new PushPullParticleSystem(this);
+            //_pushPullParticles = new PushPullParticleSystem(this);
 
             _particleSystemManager.AddParticleSystem(_shipExaustParticles);
             _particleSystemManager.AddParticleSystem(_shipBoostParticles);
@@ -1322,7 +1342,7 @@ namespace SSD
             _particleSystemManager.AddParticleSystem(_shipExplodeParticles);
             _particleSystemManager.AddParticleSystem(_shipBombExplodeParticles);
             //_particleSystemManager.AddParticleSystem(_powerUpParticles);
-            _particleSystemManager.AddParticleSystem(_pushPullParticles);
+            //_particleSystemManager.AddParticleSystem(_pushPullParticles);
             _particleSystemManager.AutoInitializeAllParticleSystems(this.GraphicsDevice, this.Content, null);
 
             _shipBoostParticles.Emitter.EmitParticlesAutomatically = false;
@@ -1333,12 +1353,12 @@ namespace SSD
             _shipExplodeParticles.Emitter.EmitParticlesAutomatically = false;
             _shipBombExplodeParticles.Emitter.EmitParticlesAutomatically = false;
             //_powerUpParticles.Emitter.EmitParticlesAutomatically = false;
-            _pushPullParticles.Emitter.EmitParticlesAutomatically = false;
+            //_pushPullParticles.Emitter.EmitParticlesAutomatically = false;
 
             _rockExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
             _mineExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
             _shipExplodeParticles.Emitter.LerpEmittersPositionAndOrientation = false;
-            _pushPullParticles.Emitter.LerpEmittersPositionAndOrientation = false;
+            //_pushPullParticles.Emitter.LerpEmittersPositionAndOrientation = false;
 
             //_rockExplodeParticles.ChangeExplosionColor(Color.Cyan);
             //_mineExplodeParticles.ChangeExplosionColor(Color.Red);
@@ -1349,6 +1369,7 @@ namespace SSD
         //    _currentMenu = newMenu;
         //}
 
+        //Changes the game difficulty
         public void setGameDifficulty(int difficulty)
         {
             switch (difficulty)

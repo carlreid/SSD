@@ -14,6 +14,7 @@ namespace SSD
             _planetModel = "worldSphere";
         }
 
+        //Will do things depeneding on current _levelTime and phase
         override public void update(GameTime gameTime, Entity targetPlanet, PlayerEntity player)
         {
             base.update(gameTime, targetPlanet, player);

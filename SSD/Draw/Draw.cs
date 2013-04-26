@@ -14,7 +14,6 @@ namespace SSD
     class Draw
     {
 
-
         public Draw(GraphicsDevice graphicsDevice, ContentManager content)
         {
             _graphicsDevice = graphicsDevice;

@@ -66,6 +66,7 @@ Content\Models\e_iceBossTail.xnb
 Content\Models\enemyIceBossTexture_0.xnb
 Content\GUI\xboxControllerButtonA.xnb
 Content\GUI\xboxControllerButtonB.xnb
+Content\GUI\controls.xnb
 Content\Music\game_music.wma
 Content\XACTProject.xgs
 Content\BulletWaveBank.xwb

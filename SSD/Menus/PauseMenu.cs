@@ -13,6 +13,7 @@ namespace SSD
             base(mainGame, callerMenu, viewport, selectedItem)
         {
             _menuItems.Add("Resume Game");
+            _menuItems.Add("Controls");
             _menuItems.Add("Options");
             _menuItems.Add("Main Menu");
             _menuItems.Add("Exit Game");
@@ -33,6 +34,9 @@ namespace SSD
                 case "Main Menu":
                     currentDisplay = _callerMenu;
                     _mainGame.restartGame(1);
+                    break;
+                case "Controls":
+                    currentDisplay = new ControlsMenu(_mainGame, this, _viewport);
                     break;
                 case "Resume Game":
                     inMenu = false;

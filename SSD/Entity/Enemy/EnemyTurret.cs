@@ -139,7 +139,7 @@ namespace SSD
         }
 
         Entity _planetTarget;
-        Draw _renderer;
+        //Draw _renderer;
         float _lastBulletShot;
         float _bulletShootSpeed;
         float _rotation;

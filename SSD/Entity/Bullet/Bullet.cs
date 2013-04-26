@@ -101,11 +101,11 @@ namespace SSD
             _timeTillDeath = lifespan;
         }
 
-        protected void setScale(float scale)
-        {
-            _scale = scale;
-            base.setScale(_scale);
-        }
+        //protected void setScale(float scale)
+        //{
+        //    _scale = scale;
+        //    base.setScale(_scale);
+        //}
 
         //public void setEnemyBullet(bool enemyBullet)
         //{
